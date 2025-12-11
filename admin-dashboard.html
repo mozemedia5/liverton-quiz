@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Liverton Quiz Championship</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-text { background: linear-gradient(45deg, #0891b2, #0e7490); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .admin-card { transition: all 0.3s ease; }
+        .admin-card:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-slate-900/80 backdrop-blur-md z-50 border-b border-cyan-500/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">AD</span>
+                    </div>
+                    <span class="text-xl font-semibold">Admin Dashboard</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="admin-dashboard.html" class="text-cyan-400 hover:text-cyan-300 transition-colors">Dashboard</a>
+                    <a href="admin-questions.html" class="text-white hover:text-cyan-300 transition-colors">Questions</a>
+                    <a href="admin-users.html" class="text-white hover:text-cyan-300 transition-colors">Users</a>
+                    <a href="admin-payments.html" class="text-white hover:text-cyan-300 transition-colors">Payments</a>
+                    <button id="logoutBtn" class="text-white hover:text-red-300 transition-colors">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="pt-20 pb-8">
+        <div class="max-w-7xl mx-auto px-4">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-4xl font-bold gradient-text mb-2">Admin Dashboard</h1>
+                <p class="text-gray-300">Manage the Liverton Quiz Championship</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid md:grid-cols-4 gap-6 mb-8">
+                <div class="admin-card bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-cyan-500/20">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Total Users</p>
+                            <p class="text-3xl font-bold text-cyan-400" id="totalUsers">-</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-card bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-green-500/20">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Approved Users</p>
+                            <p class="text-3xl font-bold text-green-400" id="approvedUsers">-</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-card bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-yellow-500/20">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Pending Payments</p>
+                            <p class="text-3xl font-bold text-yellow-400" id="pendingPayments">-</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-card bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/20">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Total Quizzes</p>
+                            <p class="text-3xl font-bold text-purple-400" id="totalQuizzes">-</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 border border-cyan-500/20 mb-8">
+                <h2 class="text-2xl font-bold mb-6 gradient-text">Quick Actions</h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <button onclick="window.location.href='admin-questions.html'" class="admin-card bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white p-6 rounded-xl text-center transition-all">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Manage Questions</h3>
+                        <p class="text-sm opacity-90">Create and edit quiz questions</p>
+                    </button>
+
+                    <button onclick="window.location.href='admin-users.html'" class="admin-card bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white p-6 rounded-xl text-center transition-all">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Manage Users</h3>
+                        <p class="text-sm opacity-90">View and approve user registrations</p>
+                    </button>
+
+                    <button onclick="window.location.href='admin-payments.html'" class="admin-card bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white p-6 rounded-xl text-center transition-all">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Manage Payments</h3>
+                        <p class="text-sm opacity-90">Approve payment verifications</p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-cyan-500/20">
+                    <h3 class="text-xl font-bold mb-6">Recent Registrations</h3>
+                    <div id="recentRegistrations" class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                            <div>
+                                <p class="font-medium">Loading...</p>
+                                <p class="text-sm text-gray-400">Please wait</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-cyan-500/20">
+                    <h3 class="text-xl font-bold mb-6">System Status</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                            <span class="text-gray-300">Firebase Connection</span>
+                            <span class="text-green-400 font-semibold">✓ Online</span>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                            <span class="text-gray-300">Quiz System</span>
+                            <span class="text-green-400 font-semibold">✓ Active</span>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                            <span class="text-gray-300">Leaderboard</span>
+                            <span class="text-green-400 font-semibold">✓ Updated</span>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                            <span class="text-gray-300">Payment System</span>
+                            <span class="text-yellow-400 font-semibold">⏳ Manual</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-8 border-t border-slate-700">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-gray-400 mb-2">© 2026 Liverton Quiz Championship | © Liverton Codes</p>
+            <p class="text-gray-500 text-sm">Designed by Musa</p>
+        </div>
+    </footer>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAvqWrEUrag34Wb92D1ixmXVCh3-HY5iB8",
+            authDomain: "liverton-quiz-championship.firebaseapp.com",
+            projectId: "liverton-quiz-championship",
+            storageBucket: "liverton-quiz-championship.firebasestorage.app",
+            messagingSenderId: "1090719692182",
+            appId: "1:1090719692182:web:96920d6ba665541a6a59b7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Check authentication and admin role
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'admin-login.html';
+                return;
+            }
+
+            // Check if user is admin
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            const userData = userDoc.data();
+
+            if (userData.role !== 'admin') {
+                await signOut(auth);
+                window.location.href = 'admin-login.html';
+                return;
+            }
+
+            loadDashboardData();
+        });
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                // Get total users
+                const usersSnapshot = await getDocs(collection(db, 'users'));
+                const totalUsers = usersSnapshot.size;
+                document.getElementById('totalUsers').textContent = totalUsers;
+
+                // Get approved users
+                const approvedUsersSnapshot = await getDocs(query(collection(db, 'users'), where('paymentStatus', '==', 'approved')));
+                const approvedUsers = approvedUsersSnapshot.size;
+                document.getElementById('approvedUsers').textContent = approvedUsers;
+
+                // Get pending payments
+                const pendingPaymentsSnapshot = await getDocs(query(collection(db, 'users'), where('paymentStatus', '==', 'pending')));
+                const pendingPayments = pendingPaymentsSnapshot.size;
+                document.getElementById('pendingPayments').textContent = pendingPayments;
+
+                // Get total quizzes
+                const quizzesSnapshot = await getDocs(collection(db, 'quizzes'));
+                const totalQuizzes = quizzesSnapshot.size;
+                document.getElementById('totalQuizzes').textContent = totalQuizzes;
+
+                // Load recent registrations
+                await loadRecentRegistrations();
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        // Load recent registrations
+        async function loadRecentRegistrations() {
+            try {
+                const usersQuery = query(collection(db, 'users'), where('registrationSubmitted', '==', true));
+                const usersSnapshot = await getDocs(usersQuery);
+                
+                const registrations = [];
+                usersSnapshot.forEach(doc => {
+                    const user = doc.data();
+                    registrations.push({
+                        id: doc.id,
+                        name: user.name,
+                        email: user.email,
+                        phone: user.phone,
+                        paymentStatus: user.paymentStatus,
+                        registeredAt: user.registeredAt
+                    });
+                });
+
+                // Sort by registration date (newest first)
+                registrations.sort((a, b) => new Date(b.registeredAt) - new Date(a.registeredAt));
+                
+                const container = document.getElementById('recentRegistrations');
+                container.innerHTML = '';
+
+                if (registrations.length === 0) {
+                    container.innerHTML = `
+                        <div class="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                            <div>
+                                <p class="font-medium">No recent registrations</p>
+                                <p class="text-sm text-gray-400">New registrations will appear here</p>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Show only the 5 most recent
+                registrations.slice(0, 5).forEach(registration => {
+                    const registrationElement = document.createElement('div');
+                    registrationElement.className = 'flex items-center justify-between p-4 bg-slate-700/50 rounded-lg';
+                    
+                    const statusColor = registration.paymentStatus === 'approved' ? 'text-green-400' : 
+                                       registration.paymentStatus === 'rejected' ? 'text-red-400' : 'text-yellow-400';
+                    
+                    registrationElement.innerHTML = `
+                        <div>
+                            <p class="font-medium">${registration.name}</p>
+                            <p class="text-sm text-gray-400">${registration.email}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm ${statusColor} capitalize">${registration.paymentStatus}</span>
+                            <p class="text-xs text-gray-400">${new Date(registration.registeredAt).toLocaleDateString()}</p>
+                        </div>
+                    `;
+                    
+                    container.appendChild(registrationElement);
+                });
+
+            } catch (error) {
+                console.error('Error loading recent registrations:', error);
+            }
+        }
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        });
+
+        // Page animations
+        anime({
+            targets: '.admin-card',
+            translateY: [50, 0],
+            opacity: [0, 1],
+            duration: 800,
+            delay: anime.stagger(100),
+            easing: 'easeOutExpo'
+        });
+    </script>
+</body>
+</html>

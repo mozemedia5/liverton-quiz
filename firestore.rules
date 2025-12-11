@@ -1,0 +1,99 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Users collection - users can only read/write their own document
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId && 
+                    request.resource.data.role == 'user' &&
+                    request.resource.data.paymentStatus == 'pending';
+      allow update: if request.auth != null && (
+        (request.auth.uid == userId && 
+         request.resource.data.diff(resource.data).affectedKeys()
+         .hasOnly(['name', 'phone'])) ||
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+      allow delete: if false; // Users cannot delete their own accounts
+    }
+    
+    // Admins can read all users
+    match /users/{userId} {
+      allow read: if request.auth != null && 
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Quizzes collection - only admins can write, all authenticated users can read
+    match /quizzes/{quizId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && 
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow update: if request.auth != null && 
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow delete: if request.auth != null && 
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Questions collection - only admins can write, all authenticated users can read
+    match /questions/{questionId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && 
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow update: if request.auth != null && 
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow delete: if request.auth != null && 
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Attempts collection - users can create their own attempts, read their own attempts
+    match /attempts/{attemptId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && 
+                   request.auth.uid == request.resource.data.userId &&
+                   request.resource.data.score >= 0 &&
+                   request.resource.data.timeSpent >= 0 &&
+                   request.resource.data.answers is list;
+      allow update: if false; // Attempts cannot be updated
+      allow delete: if false; // Attempts cannot be deleted
+    }
+    
+    // Admins can read all attempts
+    match /attempts/{attemptId} {
+      allow read: if request.auth != null && 
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Season stats collection - users can read their own stats, admins can read all
+    match /season_stats/{statsId} {
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.userId ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+      allow create: if false; // Only Cloud Functions can create stats
+      allow update: if false; // Only Cloud Functions can update stats
+      allow delete: if false; // Stats cannot be deleted
+    }
+    
+    // Payments collection - only admins can read/write
+    match /payments/{paymentId} {
+      allow read: if request.auth != null && 
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow create: if request.auth != null && 
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow update: if request.auth != null && 
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow delete: if false; // Payments cannot be deleted
+    }
+    
+    // Seasons collection - only admins can write, all authenticated users can read
+    match /seasons/{seasonId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && 
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow update: if request.auth != null && 
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow delete: if request.auth != null && 
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+  }
+}

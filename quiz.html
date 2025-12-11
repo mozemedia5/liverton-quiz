@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Quiz - Liverton Quiz Championship</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-text { background: linear-gradient(45deg, #0891b2, #0e7490); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .timer-circle { stroke-dasharray: 283; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear; }
+        .option-button { transition: all 0.3s ease; }
+        .option-button:hover { transform: translateY(-2px); }
+        .option-selected { background: linear-gradient(45deg, #0891b2, #0e7490); border-color: #0891b2; }
+        .option-correct { background: linear-gradient(45deg, #10b981, #059669); border-color: #10b981; }
+        .option-incorrect { background: linear-gradient(45deg, #ef4444, #dc2626); border-color: #ef4444; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-slate-900/80 backdrop-blur-md z-50 border-b border-cyan-500/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">LQ</span>
+                    </div>
+                    <span class="text-xl font-semibold">Liverton Quiz</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="dashboard.html" class="text-white hover:text-cyan-300 transition-colors">Dashboard</a>
+                    <a href="quiz.html" class="text-cyan-400 hover:text-cyan-300 transition-colors">Daily Quiz</a>
+                    <a href="leaderboard.html" class="text-white hover:text-cyan-300 transition-colors">Leaderboard</a>
+                    <a href="rules.html" class="text-white hover:text-cyan-300 transition-colors">Rules</a>
+                    <button id="logoutBtn" class="text-white hover:text-red-300 transition-colors">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Quiz Container -->
+    <section class="pt-20 pb-8 min-h-screen">
+        <div class="max-w-4xl mx-auto px-4">
+            <!-- Quiz Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold gradient-text mb-2">Daily Quiz</h1>
+                <p class="text-gray-300" id="quizDate"></p>
+            </div>
+
+            <!-- Quiz Progress -->
+            <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-cyan-500/20 mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-gray-300">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">10</span></span>
+                    <span class="text-gray-300">Score: <span id="currentScore">0</span>/30</span>
+                </div>
+                <div class="w-full bg-slate-700 rounded-full h-2">
+                    <div class="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full transition-all duration-300" id="progressBar" style="width: 10%"></div>
+                </div>
+            </div>
+
+            <!-- Quiz Content -->
+            <div id="quizContent" class="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 border border-cyan-500/20">
+                <!-- Timer -->
+                <div class="flex justify-center mb-8">
+                    <div class="relative w-24 h-24">
+                        <svg class="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" stroke="#374151" stroke-width="8" fill="none"/>
+                            <circle cx="50" cy="50" r="45" stroke="#0891b2" stroke-width="8" fill="none" 
+                                    class="timer-circle" id="timerCircle"/>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="text-2xl font-bold" id="timerText">15</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question -->
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-semibold mb-6" id="questionText">Loading question...</h2>
+                </div>
+
+                <!-- Options -->
+                <div class="grid gap-4 mb-8" id="optionsContainer">
+                    <!-- Options will be dynamically generated -->
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-center space-x-4">
+                    <button id="retryBtn" class="hidden bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition-all">
+                        Retry Question
+                    </button>
+                    <button id="nextBtn" class="hidden bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all">
+                        Next Question
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quiz Results (Hidden initially) -->
+            <div id="quizResults" class="hidden bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 border border-cyan-500/20">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold gradient-text mb-4">Quiz Completed!</h2>
+                    <div class="grid md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-slate-700/50 rounded-xl p-6">
+                            <p class="text-gray-400 text-sm">Final Score</p>
+                            <p class="text-3xl font-bold text-cyan-400" id="finalScore">0/30</p>
+                        </div>
+                        <div class="bg-slate-700/50 rounded-xl p-6">
+                            <p class="text-gray-400 text-sm">Time Taken</p>
+                            <p class="text-3xl font-bold text-green-400" id="totalTime">0s</p>
+                        </div>
+                        <div class="bg-slate-700/50 rounded-xl p-6">
+                            <p class="text-gray-400 text-sm">Accuracy</p>
+                            <p class="text-3xl font-bold text-yellow-400" id="accuracy">0%</p>
+                        </div>
+                    </div>
+                    <button id="viewAnswersBtn" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-3 rounded-lg font-semibold transition-all mr-4">
+                        View Answers
+                    </button>
+                    <button id="backToDashboardBtn" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all">
+                        Back to Dashboard
+                    </button>
+                </div>
+            </div>
+
+            <!-- Answer Review (Hidden initially) -->
+            <div id="answerReview" class="hidden bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 border border-cyan-500/20">
+                <h3 class="text-2xl font-bold mb-6">Answer Review</h3>
+                <div id="reviewContainer" class="space-y-6">
+                    <!-- Review questions will be dynamically generated -->
+                </div>
+                <div class="text-center mt-8">
+                    <button id="backToResultsBtn" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all">
+                        Back to Results
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-8 border-t border-slate-700">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-gray-400 mb-2">© 2026 Liverton Quiz Championship | © Liverton Codes</p>
+            <p class="text-gray-500 text-sm">Designed by Musa</p>
+        </div>
+    </footer>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAvqWrEUrag34Wb92D1ixmXVCh3-HY5iB8",
+            authDomain: "liverton-quiz-championship.firebaseapp.com",
+            projectId: "liverton-quiz-championship",
+            storageBucket: "liverton-quiz-championship.firebasestorage.app",
+            messagingSenderId: "1090719692182",
+            appId: "1:1090719692182:web:96920d6ba665541a6a59b7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Quiz state
+        let currentUser = null;
+        let currentQuiz = null;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let totalTime = 0;
+        let timer = null;
+        let timeLeft = 15;
+        let hasRetried = false;
+        let userAnswers = [];
+        let questions = [];
+
+        // Check authentication and load quiz
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            currentUser = user;
+            await loadQuiz();
+        });
+
+        // Load today's quiz
+        async function loadQuiz() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const seasonId = 'season_2026_01';
+                
+                // Get quiz for today
+                const quizQuery = query(
+                    collection(db, 'quizzes'),
+                    where('seasonId', '==', seasonId),
+                    where('date', '==', today)
+                );
+                
+                const quizSnapshot = await getDocs(quizQuery);
+                
+                if (quizSnapshot.empty) {
+                    showNoQuizMessage();
+                    return;
+                }
+                
+                currentQuiz = quizSnapshot.docs[0].data();
+                currentQuiz.id = quizSnapshot.docs[0].id;
+                
+                // Get questions
+                const questionsQuery = query(
+                    collection(db, 'questions'),
+                    where('quizId', '==', currentQuiz.id),
+                    orderBy('questionNumber')
+                );
+                
+                const questionsSnapshot = await getDocs(questionsQuery);
+                questions = questionsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                if (questions.length === 0) {
+                    showNoQuizMessage();
+                    return;
+                }
+                
+                // Check if user already attempted this quiz
+                const attemptQuery = query(
+                    collection(db, 'attempts'),
+                    where('userId', '==', currentUser.uid),
+                    where('quizId', '==', currentQuiz.id),
+                    where('date', '==', today)
+                );
+                
+                const attemptSnapshot = await getDocs(attemptQuery);
+                if (!attemptSnapshot.empty) {
+                    showAlreadyAttemptedMessage();
+                    return;
+                }
+                
+                startQuiz();
+                
+            } catch (error) {
+                console.error('Error loading quiz:', error);
+                showErrorMessage('Failed to load quiz. Please try again.');
+            }
+        }
+
+        // Start quiz
+        function startQuiz() {
+            document.getElementById('quizDate').textContent = new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            document.getElementById('totalQuestions').textContent = questions.length;
+            loadQuestion();
+        }
+
+        // Load current question
+        function loadQuestion() {
+            const question = questions[currentQuestionIndex];
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('questionText').textContent = question.question;
+            
+            // Update progress bar
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            // Load options
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            const options = [
+                { letter: 'A', text: question.optionA },
+                { letter: 'B', text: question.optionB },
+                { letter: 'C', text: question.optionC },
+                { letter: 'D', text: question.optionD }
+            ];
+            
+            options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-button w-full p-4 bg-slate-700/50 border border-slate-600 rounded-lg text-left hover:border-cyan-500 transition-all';
+                button.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <div class="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center font-semibold">
+                            ${option.letter}
+                        </div>
+                        <span>${option.text}</span>
+                    </div>
+                `;
+                button.onclick = () => selectOption(index, option.letter);
+                optionsContainer.appendChild(button);
+            });
+            
+            // Reset state
+            hasRetried = false;
+            timeLeft = 15;
+            document.getElementById('retryBtn').classList.add('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+            
+            // Start timer
+            startTimer();
+        }
+
+        // Start question timer
+        function startTimer() {
+            const timerText = document.getElementById('timerText');
+            const timerCircle = document.getElementById('timerCircle');
+            const circumference = 2 * Math.PI * 45;
+            
+            timerCircle.style.strokeDasharray = circumference;
+            timerCircle.style.strokeDashoffset = 0;
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                timerText.textContent = timeLeft;
+                
+                const progress = (15 - timeLeft) / 15;
+                const offset = circumference * progress;
+                timerCircle.style.strokeDashoffset = offset;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleTimeUp();
+                }
+            }, 1000);
+        }
+
+        // Handle option selection
+        function selectOption(optionIndex, optionLetter) {
+            clearInterval(timer);
+            
+            const question = questions[currentQuestionIndex];
+            const isCorrect = optionLetter === question.correctAnswer;
+            
+            // Store answer
+            userAnswers.push({
+                questionId: question.id,
+                selectedAnswer: optionLetter,
+                correctAnswer: question.correctAnswer,
+                isCorrect: isCorrect,
+                timeSpent: 15 - timeLeft,
+                hasRetried: hasRetried
+            });
+            
+            // Update UI
+            const options = document.querySelectorAll('.option-button');
+            options.forEach((button, index) => {
+                button.disabled = true;
+                if (index === optionIndex) {
+                    button.classList.add(isCorrect ? 'option-correct' : 'option-incorrect');
+                }
+                
+                // Show correct answer
+                if (String.fromCharCode(65 + index) === question.correctAnswer) {
+                    button.classList.add('option-correct');
+                }
+            });
+            
+            if (isCorrect) {
+                score += 3;
+                document.getElementById('currentScore').textContent = score;
+                showNextButton();
+            } else if (!hasRetried) {
+                document.getElementById('retryBtn').classList.remove('hidden');
+            } else {
+                showNextButton();
+            }
+        }
+
+        // Handle retry
+        function retryQuestion() {
+            hasRetried = true;
+            timeLeft = 15;
+            document.getElementById('retryBtn').classList.add('hidden');
+            
+            // Reset options
+            const options = document.querySelectorAll('.option-button');
+            options.forEach(button => {
+                button.disabled = false;
+                button.className = 'option-button w-full p-4 bg-slate-700/50 border border-slate-600 rounded-lg text-left hover:border-cyan-500 transition-all';
+            });
+            
+            startTimer();
+        }
+
+        // Handle time up
+        function handleTimeUp() {
+            const question = questions[currentQuestionIndex];
+            
+            // Store as incorrect
+            userAnswers.push({
+                questionId: question.id,
+                selectedAnswer: null,
+                correctAnswer: question.correctAnswer,
+                isCorrect: false,
+                timeSpent: 15,
+                hasRetried: hasRetried
+            });
+            
+            // Show correct answer
+            const options = document.querySelectorAll('.option-button');
+            options.forEach((button, index) => {
+                button.disabled = true;
+                if (String.fromCharCode(65 + index) === question.correctAnswer) {
+                    button.classList.add('option-correct');
+                }
+            });
+            
+            showNextButton();
+        }
+
+        // Show next button
+        function showNextButton() {
+            document.getElementById('nextBtn').classList.remove('hidden');
+        }
+
+        // Next question
+        function nextQuestion() {
+            currentQuestionIndex++;
+            totalTime += 15 - timeLeft;
+            
+            if (currentQuestionIndex >= questions.length) {
+                finishQuiz();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        // Finish quiz
+        async function finishQuiz() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                
+                // Save attempt
+                const attemptData = {
+                    userId: currentUser.uid,
+                    quizId: currentQuiz.id,
+                    date: today,
+                    score: score,
+                    timeSpent: totalTime,
+                    answers: userAnswers,
+                    completedAt: serverTimestamp()
+                };
+                
+                await addDoc(collection(db, 'attempts'), attemptData);
+                
+                // Show results
+                showResults();
+                
+            } catch (error) {
+                console.error('Error finishing quiz:', error);
+                showErrorMessage('Failed to save quiz results. Please try again.');
+            }
+        }
+
+        // Show results
+        function showResults() {
+            document.getElementById('quizContent').classList.add('hidden');
+            document.getElementById('quizResults').classList.remove('hidden');
+            
+            document.getElementById('finalScore').textContent = `${score}/30`;
+            document.getElementById('totalTime').textContent = `${totalTime}s`;
+            
+            const accuracy = Math.round((score / 30) * 100);
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+        }
+
+        // Show answer review
+        function showAnswerReview() {
+            document.getElementById('quizResults').classList.add('hidden');
+            document.getElementById('answerReview').classList.remove('hidden');
+            
+            const reviewContainer = document.getElementById('reviewContainer');
+            reviewContainer.innerHTML = '';
+            
+            questions.forEach((question, index) => {
+                const userAnswer = userAnswers[index];
+                const reviewElement = document.createElement('div');
+                reviewElement.className = 'bg-slate-700/50 rounded-lg p-6';
+                
+                reviewElement.innerHTML = `
+                    <div class="flex items-start justify-between mb-4">
+                        <h4 class="font-semibold">Question ${index + 1}</h4>
+                        <span class="text-sm ${userAnswer.isCorrect ? 'text-green-400' : 'text-red-400'}">
+                            ${userAnswer.isCorrect ? '+3 points' : '0 points'}
+                        </span>
+                    </div>
+                    <p class="text-gray-300 mb-4">${question.question}</p>
+                    <div class="space-y-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-400">Your answer:</span>
+                            <span class="text-sm ${userAnswer.isCorrect ? 'text-green-400' : 'text-red-400'}">
+                                ${userAnswer.selectedAnswer || 'No answer'}
+                            </span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-400">Correct answer:</span>
+                            <span class="text-sm text-green-400">${question.correctAnswer}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-400">Time spent:</span>
+                            <span class="text-sm text-gray-300">${userAnswer.timeSpent}s</span>
+                        </div>
+                    </div>
+                `;
+                
+                reviewContainer.appendChild(reviewElement);
+            });
+        }
+
+        // Show messages
+        function showNoQuizMessage() {
+            document.getElementById('quizContent').innerHTML = `
+                <div class="text-center py-12">
+                    <div class="text-6xl mb-4">📅</div>
+                    <h2 class="text-2xl font-bold mb-4">No Quiz Today</h2>
+                    <p class="text-gray-300 mb-6">There is no quiz scheduled for today. Please check back tomorrow!</p>
+                    <a href="dashboard.html" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all">
+                        Back to Dashboard
+                    </a>
+                </div>
+            `;
+        }
+
+        function showAlreadyAttemptedMessage() {
+            document.getElementById('quizContent').innerHTML = `
+                <div class="text-center py-12">
+                    <div class="text-6xl mb-4">✅</div>
+                    <h2 class="text-2xl font-bold mb-4">Quiz Already Completed</h2>
+                    <p class="text-gray-300 mb-6">You have already completed today's quiz. Great job!</p>
+                    <a href="dashboard.html" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all">
+                        Back to Dashboard
+                    </a>
+                </div>
+            `;
+        }
+
+        function showErrorMessage(message) {
+            document.getElementById('quizContent').innerHTML = `
+                <div class="text-center py-12">
+                    <div class="text-6xl mb-4">❌</div>
+                    <h2 class="text-2xl font-bold mb-4">Error</h2>
+                    <p class="text-gray-300 mb-6">${message}</p>
+                    <button onclick="location.reload()" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all">
+                        Try Again
+                    </button>
+                </div>
+            `;
+        }
+
+        // Event listeners
+        document.getElementById('retryBtn').addEventListener('click', retryQuestion);
+        document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+        document.getElementById('viewAnswersBtn').addEventListener('click', showAnswerReview);
+        document.getElementById('backToResultsBtn').addEventListener('click', () => {
+            document.getElementById('answerReview').classList.add('hidden');
+            document.getElementById('quizResults').classList.remove('hidden');
+        });
+        document.getElementById('backToDashboardBtn').addEventListener('click', () => {
+            window.location.href = 'dashboard.html';
+        });
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
