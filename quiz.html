@@ -348,7 +348,7 @@
                 correctAnswer: question.correctAnswer,
                 isCorrect: isCorrect,
                 timeSpent: 15 - timeLeft,
-                hasRetried: hasRetried
+                hasRetried: false
             });
             
             // Update UI
@@ -360,9 +360,9 @@
                 }
                 
                 // Show correct answer
-                if (String.fromCharCode(65 + index) === question.correctAnswer) {
-                    button.classList.add('option-correct');
-                }
+                if (index === optionIndex) {
+    button.classList.add(isCorrect ? 'option-correct' : 'option-incorrect');
+}
             });
             
           if (isCorrect) {
@@ -372,9 +372,8 @@
 
 showNextButton();  
         }
-      }
-
-         // Handle time up
+      
+       // Handle time up
         function handleTimeUp() {
             const question = questions[currentQuestionIndex];
             
@@ -385,7 +384,7 @@ showNextButton();
                 correctAnswer: question.correctAnswer,
                 isCorrect: false,
                 timeSpent: 15,
-                hasRetried: hasRetried
+                hasRetried: false
             });
             
             // Show correct answer
@@ -539,7 +538,7 @@ showNextButton();
             `;
         }
 
-        // Event listener        document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+        // Event listeners       document.getElementById('nextBtn').addEventListener('click', nextQuestion);
         document.getElementById('viewAnswersBtn').addEventListener('click', showAnswerReview);
         document.getElementById('backToResultsBtn').addEventListener('click', () => {
             document.getElementById('answerReview').classList.add('hidden');
