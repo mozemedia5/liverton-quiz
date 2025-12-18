@@ -253,7 +253,17 @@
 
         // Start quiz
         function startQuiz() {
-            document.getElementById('quizDate').textContent = new Date().toLocaleDateString('en-US', {
+           const saved = sessionStorage.getItem('quizProgress');
+
+if (saved) {
+    const data = JSON.parse(saved);
+    currentQuestionIndex = data.currentQuestionIndex;
+    score = data.score;
+    totalTime = data.totalTime;
+    userAnswers = data.userAnswers;
+
+    document.getElementById('currentScore').textContent = score;
+} document.getElementById('quizDate').textContent = new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -362,10 +372,19 @@ document.querySelectorAll('.option-button').forEach(btn => {
     score += 3;
     document.getElementById('currentScore').textContent = score;
 }
-
+saveProgress();
 showNextButton();  
         }
-      
+          //Saving Quiz in Progress 
+
+      function saveProgress() {
+    sessionStorage.setItem('quizProgress', JSON.stringify({
+        currentQuestionIndex,
+        score,
+        totalTime,
+        userAnswers
+    }));
+}
        // Handle time up
         function handleTimeUp() {
             const question = questions[currentQuestionIndex];
@@ -426,7 +445,7 @@ showNextButton();
                 };
                 
                 await addDoc(collection(db, 'attempts'), attemptData);
-                
+                sessionStorage.removeItem('quizProgress');
                 // Show results
                 showResults();
                 
