@@ -174,7 +174,6 @@
         let totalTime = 0;
         let timer = null;
         let timeLeft = 15;
-        let hasRetried = false;
         let userAnswers = [];
         let questions = [];
 
@@ -302,8 +301,8 @@
             });
             
             // Reset state
-            hasRetried = false;
-            timeLeft = 15;
+            
+           timeLeft = 15;
             document.getElementById('retryBtn').classList.add('hidden');
             document.getElementById('nextBtn').classList.add('hidden');
             
@@ -366,34 +365,16 @@
                 }
             });
             
-            if (isCorrect) {
-                score += 3;
-                document.getElementById('currentScore').textContent = score;
-                showNextButton();
-            } else if (!hasRetried) {
-                document.getElementById('retryBtn').classList.remove('hidden');
-            } else {
-                showNextButton();
-            }
-        }
+          if (isCorrect) {
+    score += 3;
+    document.getElementById('currentScore').textContent = score;
+}
 
-        // Handle retry
-        function retryQuestion() {
-            hasRetried = true;
-            timeLeft = 15;
-            document.getElementById('retryBtn').classList.add('hidden');
-            
-            // Reset options
-            const options = document.querySelectorAll('.option-button');
-            options.forEach(button => {
-                button.disabled = false;
-                button.className = 'option-button w-full p-4 bg-slate-700/50 border border-slate-600 rounded-lg text-left hover:border-cyan-500 transition-all';
-            });
-            
-            startTimer();
+showNextButton();  
         }
+      }
 
-        // Handle time up
+         // Handle time up
         function handleTimeUp() {
             const question = questions[currentQuestionIndex];
             
@@ -558,9 +539,7 @@
             `;
         }
 
-        // Event listeners
-        document.getElementById('retryBtn').addEventListener('click', retryQuestion);
-        document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+        // Event listener        document.getElementById('nextBtn').addEventListener('click', nextQuestion);
         document.getElementById('viewAnswersBtn').addEventListener('click', showAnswerReview);
         document.getElementById('backToResultsBtn').addEventListener('click', () => {
             document.getElementById('answerReview').classList.add('hidden');
