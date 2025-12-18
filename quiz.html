@@ -353,17 +353,10 @@
             
             // Update UI
             const options = document.querySelectorAll('.option-button');
-            options.forEach((button, index) => {
-                button.disabled = true;
-                if (index === optionIndex) {
-                    button.classList.add(isCorrect ? 'option-correct' : 'option-incorrect');
-                }
-                
-                // Show correct answer
-                if (index === optionIndex) {
-    button.classList.add(isCorrect ? 'option-correct' : 'option-incorrect');
-}
-            });
+            // Disable all options WITHOUT showing correct/incorrect colors
+document.querySelectorAll('.option-button').forEach(btn => {
+    btn.disabled = true;
+});
             
           if (isCorrect) {
     score += 3;
