@@ -500,6 +500,22 @@ const sessionRef = doc(db, 'quizSessions', `${currentUser.uid}_${currentQuiz.id}
 await updateDoc(sessionRef, {
     completed: true
 });
+async function endQuiz() {
+    clearInterval(timer);
+
+    const sessionRef = doc(
+        db,
+        'quizSessions',
+        `${currentUser.uid}_${currentQuiz.id}`
+    );
+
+    await updateDoc(sessionRef, {
+        completed: true,
+        finishedAt: serverTimestamp()
+    });
+
+    showResults();
+}
                 // Show results
                 showResults();
                 
@@ -625,6 +641,21 @@ document.getElementById('nextBtn').addEventListener('click', nextQuestion);
                 console.error('Logout error:', error);
             }
         });
+window.addEventListener('beforeunload', (event) => {
+    updateSession();
+
+    // This line is required to trigger the event in some browsers
+    event.preventDefault();
+    event.returnValue = '';
+});
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        updateSession();
+    }
+});
+setInterval(() => {
+    updateSession();
+}, 10000);
     </script>
 </body>
 </html>
