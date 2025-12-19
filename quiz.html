@@ -143,310 +143,270 @@
     <footer class="bg-slate-900 py-8 border-t border-slate-700">
         <div class="max-w-6xl mx-auto px-4 text-center">
             <p class="text-gray-400 mb-2">© 2026 Liverton Quiz Championship | © Liverton Codes</p>
-            <p class="text-gray-500 text-sm">Designed by Muslim Musa</p>
+            <p class="text-gray-500 text-sm">Designed by Musa</p>
         </div>
     </footer>
+<!--  NEW ANTI-CHEAT SCRIPT  (replaces the old block completely)  -->
 <script type="module">
-/* ============================
-   FIREBASE IMPORTS (FULL & SAFE)
-============================ */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-    getFirestore,
-    collection,
-    doc,
-    getDoc,
-    getDocs,
-    setDoc,
-    updateDoc,
-    query,
-    where,
-    orderBy,
-    serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import {
-    getAuth,
-    onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+/* =========  original imports  ========= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, orderBy, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-/* ============================
-   FIREBASE CONFIG
-============================ */
+/* =========  config  ========= */
 const firebaseConfig = {
-            apiKey: "AIzaSyAvqWrEUrag34Wb92D1ixmXVCh3-HY5iB8",
-            authDomain: "liverton-quiz-championship.firebaseapp.com",
-            projectId: "liverton-quiz-championship",
-            storageBucket: "liverton-quiz-championship.firebasestorage.app",
-            messagingSenderId: "1090719692182",
-            appId: "1:1090719692182:web:96920d6ba665541a6a59b7"
-        };
+  apiKey: "AIzaSyAvqWrEUrag34Wb92D1ixmXVCh3-HY5iB8",
+  authDomain: "liverton-quiz-championship.firebaseapp.com",
+  projectId: "liverton-quiz-championship",
+  storageBucket: "liverton-quiz-championship.firebasestorage.app",
+  messagingSenderId: "1090719692182",
+  appId: "1:1090719692182:web:96920d6ba665541a6a59b7"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-
-/* ============================
-   GLOBAL STATE
-============================ */
+/* =========  state  ========= */
 let currentUser = null;
 let currentQuiz = null;
-let questions = [];
-
 let currentQuestionIndex = 0;
 let score = 0;
-let userAnswers = [];
+let totalTime = 0;
 let timer = null;
 let timeLeft = 15;
-let sessionReady = false;
+let userAnswers = [];
+let questions = [];
+let attemptDocId = null;          // NEW: single attempt id for this user+quiz
 
-/* ============================
-   AUTH HANDLER
-============================ */
+/* =========  entry  ========= */
 onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-        window.location.href = "login.html";
-        return;
-    }
-
-    currentUser = user;
-    await initializeQuiz();
+  if (!user) { window.location.href = 'login.html'; return; }
+  currentUser = user;
+  await loadQuiz();
 });
 
-/* ============================
-   INITIALIZE QUIZ (ORDER MATTERS)
-============================ */
-async function initializeQuiz() {
-    currentQuiz = await fetchTodayQuiz();
-    if (!currentQuiz) {
-        showNoQuizMessage();
-        return;
+/* =========  load quiz & questions  ========= */
+async function loadQuiz() {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const seasonId = 'season_2026_01';
+
+    // 1. get today’s quiz (exactly like before)
+    const quizSnap = await getDocs(query(collection(db, 'quizzes'), where('seasonId', '==', seasonId), where('date', '==', today)));
+    if (quizSnap.empty) { showNoQuizMessage(); return; }
+    currentQuiz = { id: quizSnap.docs[0].id, ...quizSnap.docs[0].data() };
+
+    // 2. get questions (exactly like before)
+    const qSnap = await getDocs(query(collection(db, 'questions'), where('quizId', '==', currentQuiz.id), orderBy('questionNumber')));
+    questions = qSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!questions.length) { showNoQuizMessage(); return; }
+
+    // 3. anti-cheat: single attempt doc (user+quiz+date)
+    attemptDocId = `${currentUser.uid}_${currentQuiz.id}_${today}`;
+    const attemptRef = doc(db, 'attempts', attemptDocId);
+    const attemptSnap = await getDoc(attemptRef);
+
+    if (attemptSnap.exists() && attemptSnap.data().completed) {
+      showAlreadyAttemptedMessage(); return;
     }
 
-    questions = currentQuiz.questions;
-    if (!questions.length) {
-        showNoQuizMessage();
-        return;
-    }
-
-    await loadOrCreateSession();
-    sessionReady = true;
-
-    loadQuestion();
-    startTimer();
-}
-
-/* ============================
-   FETCH TODAY'S QUIZ (ADMIN)
-============================ */
-async function fetchTodayQuiz() {
-    const today = new Date().toISOString().split("T")[0];
-
-    const q = query(
-        collection(db, "dailyQuizzes"),
-        where("date", "==", today),
-        orderBy("createdAt", "desc") 
-    );
-
-    const snap = await getDocs(q);
-    if (snap.empty) return null;
-
-    const docSnap = snap.docs[0];
-    return {
-        id: docSnap.id,
-        ...docSnap.data()
-    };
-}
-
-/* ============================
-   SESSION HANDLING (SINGLE SOURCE)
-============================ */
-async function loadOrCreateSession() {
-    const sessionRef = doc(
-        db,
-        "quizSessions",
-        `${currentUser.uid}_${currentQuiz.id}`
-    );
-
-    const snap = await getDoc(sessionRef);
-
-    if (snap.exists()) {
-        const data = snap.data();
-
-        if (data.completed === true) {
-            showAlreadyAttemptedMessage();
-            throw new Error("Quiz already completed");
-        }
-
-        currentQuestionIndex = data.currentQuestionIndex;
-        score = data.score;
-        userAnswers = data.userAnswers || [];
-        return;
-    }
-
-    await setDoc(sessionRef, {
+    if (!attemptSnap.exists()) {
+      // first time – create attempt
+      await setDoc(attemptRef, {
         userId: currentUser.uid,
         quizId: currentQuiz.id,
-        currentQuestionIndex: 0,
-        score: 0,
-        userAnswers: [],
+        date: today,
         completed: false,
-        startedAt: serverTimestamp(),
-        lastUpdated: serverTimestamp()
-    });
+        qIndex: 0,
+        score: 0,
+        totalTime: 0,
+        answers: [],
+        lastSeen: serverTimestamp()
+      });
+    } else {
+      // resume – load previous state
+      const d = attemptSnap.data();
+      currentQuestionIndex = d.qIndex;
+      score = d.score;
+      totalTime = d.totalTime;
+      userAnswers = d.answers || [];
+      document.getElementById('currentScore').textContent = score;
+    }
+
+    startQuiz();
+  } catch (e) {
+    console.error(e);
+    showErrorMessage('Failed to load quiz.');
+  }
 }
 
-/* ============================
-   SAFE SESSION UPDATE
-============================ */
-async function updateSession() {
-    if (!sessionReady || !currentUser || !currentQuiz) return;
-
-    const sessionRef = doc(
-        db,
-        "quizSessions",
-        `${currentUser.uid}_${currentQuiz.id}`
-    );
-
-    await updateDoc(sessionRef, {
-        currentQuestionIndex,
-        score,
-        userAnswers,
-        lastUpdated: serverTimestamp()
-    });
+/* =========  quiz flow  ========= */
+function startQuiz() {
+  document.getElementById('quizDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('totalQuestions').textContent = questions.length;
+  loadQuestion();
+  keepAlive();             // heartbeat
 }
 
-/* ============================
-   LOAD QUESTION
-============================ */
 function loadQuestion() {
-    clearInterval(timer);
+  const q = questions[currentQuestionIndex];
+  document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+  document.getElementById('questionText').textContent = q.question;
+  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+  document.getElementById('progressBar').style.width = progress + '%';
 
-    const question = questions[currentQuestionIndex];
-    if (!question) {
-        finishQuiz();
-        return;
-    }
+  const opts = ['A','B','C','D'].map(l => ({letter:l, text:q[`option${l}`]}));
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+  opts.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-button w-full p-4 bg-slate-700/50 border border-slate-600 rounded-lg text-left hover:border-cyan-500 transition-all';
+    btn.innerHTML = `<div class="flex items-center space-x-4"><div class="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center font-semibold">${o.letter}</div><span>${o.text}</span></div>`;
+    btn.onclick = () => selectOption(o.letter);
+    container.appendChild(btn);
+  });
 
-    document.getElementById("questionText").textContent = question.question;
-
-    const options = document.querySelectorAll(".option-btn");
-    options.forEach((btn, index) => {
-        btn.textContent = question.options[index];
-        btn.disabled = false;
-    });
-
-    timeLeft = 15;
-    document.getElementById("timer").textContent = timeLeft;
+  document.getElementById('nextBtn').classList.add('hidden');
+  timeLeft = 15;
+  startTimer();
 }
 
-/* ============================
-   TIMER
-============================ */
 function startTimer() {
-    timer = setInterval(() => {
-        timeLeft--;
-        document.getElementById("timer").textContent = timeLeft;
-
-        if (timeLeft <= 0) {
-            handleTimeUp();
-        }
-    }, 1000);
+  clearInterval(timer);
+  const circumference = 2 * Math.PI * 45;
+  const circle = document.getElementById('timerCircle');
+  circle.style.strokeDasharray = circumference;
+  circle.style.strokeDashoffset = 0;
+  timer = setInterval(() => {
+    timeLeft--;
+    document.getElementById('timerText').textContent = timeLeft;
+    const offset = circumference * (15 - timeLeft) / 15;
+    circle.style.strokeDashoffset = offset;
+    if (timeLeft <= 0) { clearInterval(timer); selectOption(null); }
+  }, 1000);
 }
 
-/* ============================
-   ANSWER SELECTION
-============================ */
-window.selectOption = async function (index, letter) {
-    clearInterval(timer);
-
-    const question = questions[currentQuestionIndex];
-    const isCorrect = letter === question.correctAnswer;
-
-    userAnswers.push({
-        questionId: question.id,
-        selectedAnswer: letter,
-        correctAnswer: question.correctAnswer,
-        isCorrect,
-        timeSpent: 15 - timeLeft
-    });
-
-    if (isCorrect) score++;
-
-    currentQuestionIndex++;
-    await updateSession();
-
-    loadQuestion();
-    startTimer();
-};
-
-/* ============================
-   TIME UP
-============================ */
-async function handleTimeUp() {
-    const question = questions[currentQuestionIndex];
-
-    userAnswers.push({
-        questionId: question.id,
-        selectedAnswer: null,
-        correctAnswer: question.correctAnswer,
-        isCorrect: false,
-        timeSpent: 15
-    });
-
-    currentQuestionIndex++;
-    await updateSession();
-
-    loadQuestion();
-    startTimer();
+async function selectOption(letter) {
+  clearInterval(timer);
+  document.querySelectorAll('.option-button').forEach(b => b.disabled = true);
+  const q = questions[currentQuestionIndex];
+  const timeSpent = 15 - timeLeft;
+  const isCorrect = letter === q.correctAnswer;
+  userAnswers.push({
+    questionId: q.id,
+    selectedAnswer: letter,
+    correctAnswer: q.correctAnswer,
+    isCorrect,
+    timeSpent
+  });
+  if (isCorrect) {
+    score += 3;
+    document.getElementById('currentScore').textContent = score;
+  }
+  await saveAttempt();           // write state to Firestore
+  document.getElementById('nextBtn').classList.remove('hidden');
 }
 
-/* ============================
-   FINISH QUIZ
-============================ */
+async function saveAttempt() {
+  const ref = doc(db, 'attempts', attemptDocId);
+  await updateDoc(ref, {
+    qIndex: currentQuestionIndex + 1,
+    score,
+    totalTime: totalTime + (15 - timeLeft),
+    answers: userAnswers,
+    lastSeen: serverTimestamp()
+  });
+}
+
+function nextQuestion() {
+  currentQuestionIndex++;
+  totalTime += 15 - timeLeft;
+  if (currentQuestionIndex >= questions.length) finishQuiz();
+  else loadQuestion();
+}
+
 async function finishQuiz() {
-    clearInterval(timer);
-
-    const sessionRef = doc(
-        db,
-        "quizSessions",
-        `${currentUser.uid}_${currentQuiz.id}`
-    );
-
-    await updateDoc(sessionRef, {
-        completed: true,
-        finishedAt: serverTimestamp(),
-        score
+  try {
+    const ref = doc(db, 'attempts', attemptDocId);
+    await updateDoc(ref, {
+      completed: true,
+      finishedAt: serverTimestamp()
     });
-
     showResults();
+  } catch (e) {
+    showErrorMessage('Could not save results.');
+  }
 }
 
-/* ============================
-   ANTI-CHEAT LAYERS
-============================ */
-window.addEventListener("beforeunload", (e) => {
-    updateSession();
-    e.preventDefault();
-    e.returnValue = "";
-});
+function showResults() {
+  document.getElementById('quizContent').classList.add('hidden');
+  document.getElementById('quizResults').classList.remove('hidden');
+  document.getElementById('finalScore').textContent = `${score}/30`;
+  document.getElementById('totalTime').textContent = `${totalTime}s`;
+  document.getElementById('accuracy').textContent = `${Math.round(score / 30 * 100)}%`;
+}
 
-document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") {
-        updateSession();
+/* =========  heartbeat / anti-tab-switch  ========= */
+async function keepAlive() {
+  setInterval(async () => {
+    try {
+      const ref = doc(db, 'attempts', attemptDocId);
+      await updateDoc(ref, { lastSeen: serverTimestamp() });
+    } catch (e) {
+      // server unreachable – freeze
+      clearInterval(timer);
+      document.querySelectorAll('.option-button').forEach(b => b.disabled = true);
+      showErrorMessage('Connection lost – quiz frozen.');
     }
+  }, 5000);
+}
+
+/* =========  utility messages  ========= */
+function showNoQuizMessage() {
+  document.getElementById('quizContent').innerHTML = `
+    <div class="text-center py-12"><div class="text-6xl mb-4">📅</div><h2 class="text-2xl font-bold mb-4">No Quiz Today</h2><p class="text-gray-300 mb-6">There is no quiz scheduled for today. Please check back tomorrow!</p><a href="dashboard.html" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all">Back to Dashboard</a></div>`;
+}
+function showAlreadyAttemptedMessage() {
+  document.getElementById('quizContent').innerHTML = `
+    <div class="text-center py-12"><div class="text-6xl mb-4">✅</div><h2 class="text-2xl font-bold mb-4">Quiz Already Completed</h2><p class="text-gray-300 mb-6">You have already completed today's quiz. Great job!</p><a href="dashboard.html" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all">Back to Dashboard</a></div>`;
+}
+function showErrorMessage(msg) {
+  document.getElementById('quizContent').innerHTML = `
+    <div class="text-center py-12"><div class="text-6xl mb-4">❌</div><h2 class="text-2xl font-bold mb-4">Error</h2><p class="text-gray-300 mb-6">${msg}</p><button onclick="location.reload()" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all">Try Again</button></div>`;
+}
+
+/* =========  event bindings  ========= */
+document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+document.getElementById('viewAnswersBtn').addEventListener('click', () => {
+  document.getElementById('quizResults').classList.add('hidden');
+  document.getElementById('answerReview').classList.remove('hidden');
+  const box = document.getElementById('reviewContainer');
+  box.innerHTML = '';
+  questions.forEach((q, i) => {
+    const ua = userAnswers[i];
+    const div = document.createElement('div');
+    div.className = 'bg-slate-700/50 rounded-lg p-6';
+    div.innerHTML = `
+      <div class="flex items-start justify-between mb-4"><h4 class="font-semibold">Question ${i + 1}</h4><span class="text-sm ${ua.isCorrect ? 'text-green-400' : 'text-red-400'}">${ua.isCorrect ? '+3 points' : '0 points'}</span></div>
+      <p class="text-gray-300 mb-4">${q.question}</p>
+      <div class="space-y-2">
+        <div class="flex items-center space-x-2"><span class="text-sm text-gray-400">Your answer:</span><span class="text-sm ${ua.isCorrect ? 'text-green-400' : 'text-red-400'}">${ua.selectedAnswer || 'No answer'}</span></div>
+        <div class="flex items-center space-x-2"><span class="text-sm text-gray-400">Correct answer:</span><span class="text-sm text-green-400">${q.correctAnswer}</span></div>
+        <div class="flex items-center space-x-2"><span class="text-sm text-gray-400">Time spent:</span><span class="text-sm text-gray-300">${ua.timeSpent}s</span></div>
+      </div>`;
+    box.appendChild(div);
+  });
 });
-
-setInterval(() => {
-    updateSession();
-}, 10000);
-
-/* ============================
-   UI HELPERS (KEEP YOURS)
-============================ */
-function showResults() {}
-function showAlreadyAttemptedMessage() {}
-function showNoQuizMessage() {}
+document.getElementById('backToResultsBtn').addEventListener('click', () => {
+  document.getElementById('answerReview').classList.add('hidden');
+  document.getElementById('quizResults').classList.remove('hidden');
+});
+document.getElementById('backToDashboardBtn').addEventListener('click', () => window.location.href = 'dashboard.html');
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await signOut(auth);
+  window.location.href = 'index.html';
+});
 </script>
+
 </body>
 </html>
