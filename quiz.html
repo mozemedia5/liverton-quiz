@@ -210,6 +210,44 @@
                 
                 currentQuiz = quizSnapshot.docs[0].data();
                 currentQuiz.id = quizSnapshot.docs[0].id;
+// 🔒 Check or resume quiz session
+const sessionRef = doc(
+    db,
+    'quizSessions',
+    `${currentUser.uid}_${currentQuiz.id}`
+);
+
+const sessionSnap = await getDoc(sessionRef);
+
+if (sessionSnap.exists()) {
+    const session = sessionSnap.data();
+
+    if (session.completed) {
+        showAlreadyAttemptedMessage();
+        return; // ✅ legal here
+    }
+
+    // Resume quiz
+    currentQuestionIndex = session.currentQuestionIndex;
+    score = session.score;
+    userAnswers = session.userAnswers || [];
+
+    document.getElementById('currentScore').textContent = score;
+
+    loadQuestion();
+    return; // ✅ legal here
+}
+
+// Create new session (lock quiz)
+await setDoc(sessionRef, {
+    userId: currentUser.uid,
+    quizId: currentQuiz.id,
+    startedAt: serverTimestamp(),
+    completed: false,
+    currentQuestionIndex: 0,
+    score: 0,
+    userAnswers: []
+});
                 
                 // Get questions
                 const questionsQuery = query(
@@ -250,26 +288,6 @@
                 showErrorMessage('Failed to load quiz. Please try again.');
             }
         }
-const sessionRef = doc(db, 'quizSessions', `${currentUser.uid}_${currentQuiz.id}`);
-const sessionSnap = await getDoc(sessionRef);
-
-if (sessionSnap.exists()) {
-    const session = sessionSnap.data();
-
-    if (session.completed) {
-        showAlreadyAttemptedMessage();
-        return;
-    }
-
-    // Resume existing session
-    currentQuestionIndex = session.currentQuestionIndex;
-    score = session.score;
-    userAnswers = session.userAnswers || [];
-    document.getElementById('currentScore').textContent = score;
-
-    loadQuestion();
-    return;
-}
 
 // Create new session (lock quiz)
 await setDoc(sessionRef, {
