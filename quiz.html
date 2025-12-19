@@ -289,17 +289,7 @@ await setDoc(sessionRef, {
             }
         }
 
-// Create new session (lock quiz)
-await setDoc(sessionRef, {
-    userId: currentUser.uid,
-    quizId: currentQuiz.id,
-    startedAt: serverTimestamp(),
-    completed: false,
-    currentQuestionIndex: 0,
-    score: 0,
-    userAnswers: []
-});
-        // Start quiz
+     // Start quiz
         function startQuiz() {
            const saved = sessionStorage.getItem('quizProgress');
 
