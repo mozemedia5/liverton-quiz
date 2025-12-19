@@ -245,7 +245,6 @@ async function fetchTodayQuiz() {
     const q = query(
         collection(db, "dailyQuizzes"),
         where("date", "==", today),
-        where("active", "==", true),
         orderBy("createdAt", "desc") 
     );
 
