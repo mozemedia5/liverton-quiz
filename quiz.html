@@ -250,7 +250,37 @@
                 showErrorMessage('Failed to load quiz. Please try again.');
             }
         }
+const sessionRef = doc(db, 'quizSessions', `${currentUser.uid}_${currentQuiz.id}`);
+const sessionSnap = await getDoc(sessionRef);
 
+if (sessionSnap.exists()) {
+    const session = sessionSnap.data();
+
+    if (session.completed) {
+        showAlreadyAttemptedMessage();
+        return;
+    }
+
+    // Resume existing session
+    currentQuestionIndex = session.currentQuestionIndex;
+    score = session.score;
+    userAnswers = session.userAnswers || [];
+    document.getElementById('currentScore').textContent = score;
+
+    loadQuestion();
+    return;
+}
+
+// Create new session (lock quiz)
+await setDoc(sessionRef, {
+    userId: currentUser.uid,
+    quizId: currentQuiz.id,
+    startedAt: serverTimestamp(),
+    completed: false,
+    currentQuestionIndex: 0,
+    score: 0,
+    userAnswers: []
+});
         // Start quiz
         function startQuiz() {
            const saved = sessionStorage.getItem('quizProgress');
@@ -375,6 +405,15 @@ document.querySelectorAll('.option-button').forEach(btn => {
 saveProgress();
 showNextButton();  
         }
+async function updateSession() {
+    const sessionRef = doc(db, 'quizSessions', `${currentUser.uid}_${currentQuiz.id}`);
+
+    await updateDoc(sessionRef, {
+        currentQuestionIndex,
+        score,
+        userAnswers
+    });
+}
           //Saving Quiz in Progress 
 
       function saveProgress() {
@@ -410,6 +449,15 @@ showNextButton();
             
             showNextButton();
         }
+async function updateSession() {
+    const sessionRef = doc(db, 'quizSessions', `${currentUser.uid}_${currentQuiz.id}`);
+
+    await updateDoc(sessionRef, {
+        currentQuestionIndex,
+        score,
+        userAnswers
+    });
+}
 
         // Show next button
         function showNextButton() {
@@ -427,7 +475,15 @@ showNextButton();
                 loadQuestion();
             }
         }
+async function updateSession() {
+    const sessionRef = doc(db, 'quizSessions', `${currentUser.uid}_${currentQuiz.id}`);
 
+    await updateDoc(sessionRef, {
+        currentQuestionIndex,
+        score,
+        userAnswers
+    });
+}
         // Finish quiz
         async function finishQuiz() {
             try {
@@ -446,6 +502,11 @@ showNextButton();
                 
                 await addDoc(collection(db, 'attempts'), attemptData);
                 sessionStorage.removeItem('quizProgress');
+const sessionRef = doc(db, 'quizSessions', `${currentUser.uid}_${currentQuiz.id}`);
+
+await updateDoc(sessionRef, {
+    completed: true
+});
                 // Show results
                 showResults();
                 
