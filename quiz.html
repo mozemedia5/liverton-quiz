@@ -423,15 +423,7 @@ document.querySelectorAll('.option-button').forEach(btn => {
 saveProgress();
 showNextButton();  
         }
-async function updateSession() {
-    const sessionRef = doc(db, 'quizSessions', `${currentUser.uid}_${currentQuiz.id}`);
 
-    await updateDoc(sessionRef, {
-        currentQuestionIndex,
-        score,
-        userAnswers
-    });
-}
           //Saving Quiz in Progress 
 
       function saveProgress() {
@@ -441,6 +433,15 @@ async function updateSession() {
         totalTime,
         userAnswers
     }));
+}
+async function updateSession() {
+    const sessionRef = doc(db, 'quizSessions', `${currentUser.uid}_${currentQuiz.id}`);
+
+    await updateDoc(sessionRef, {
+        currentQuestionIndex,
+        score,
+        userAnswers
+    });
 }
        // Handle time up
         function handleTimeUp() {
@@ -467,15 +468,7 @@ async function updateSession() {
             
             showNextButton();
         }
-async function updateSession() {
-    const sessionRef = doc(db, 'quizSessions', `${currentUser.uid}_${currentQuiz.id}`);
 
-    await updateDoc(sessionRef, {
-        currentQuestionIndex,
-        score,
-        userAnswers
-    });
-}
 
         // Show next button
         function showNextButton() {
@@ -493,15 +486,7 @@ async function updateSession() {
                 loadQuestion();
             }
         }
-async function updateSession() {
-    const sessionRef = doc(db, 'quizSessions', `${currentUser.uid}_${currentQuiz.id}`);
 
-    await updateDoc(sessionRef, {
-        currentQuestionIndex,
-        score,
-        userAnswers
-    });
-}
         // Finish quiz
         async function finishQuiz() {
             try {
