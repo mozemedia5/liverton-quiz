@@ -213,7 +213,20 @@
 
                 // Get season stats
                 const seasonId = 'season_2026_01'; // Current season
-                const statsDoc = await getDoc(doc(db, 'season_stats', `${seasonId}_${userId}`));
+                // read from attempts collection instead of season_stats
+const attemptsSnap = await getDocs(
+  query(collection(db, 'attempts'), where('userId', '==', userId))
+);
+let totalP = 0, taken = 0, totalQ = 0;
+attemptsSnap.forEach(d => {
+  const a = d.data();
+  if (a.completed) { totalP += a.score; taken += 1; totalQ += a.answers?.length || 0; }
+});
+const avg = taken ? Math.round((totalP / (taken * 30)) * 100) : 0;
+document.getElementById('totalPoints').textContent = totalP;
+document.getElementById('quizzesTaken').textContent = taken;
+document.getElementById('averageScore').textContent = avg + '%';
+
                 
                 if (statsDoc.exists()) {
                     const stats = statsDoc.data();
@@ -236,28 +249,36 @@
         }
 
         // Update user rank
-        async function updateUserRank(userId, seasonId) {
-            try {
-                const statsQuery = query(
-                    collection(db, 'season_stats'),
-                    where('seasonId', '==', seasonId),
-                    orderBy('totalPoints', 'desc'),
-                    orderBy('averageTime', 'asc')
-                );
+  async function updateUserRank(userId, seasonId) {
+  try {
+    // 1. grab ALL finished attempts of the whole season
+    const allSnap = await getDocs(
+      query(collection(db, 'attempts'), where('completed', '==', true))
+    );
 
-                const statsSnapshot = await getDocs(statsQuery);
-                let rank = 1;
-                
-                statsSnapshot.forEach((doc) => {
-                    if (doc.id === `${seasonId}_${userId}`) {
-                        document.getElementById('userRank').textContent = `#${rank}`;
-                    }
-                    rank++;
-                });
-            } catch (error) {
-                console.error('Error updating rank:', error);
-            }
-        }
+    // 2. sum points per user
+    const board = {};                       // userId → total points
+    allSnap.forEach(d => {
+      const a = d.data();
+      board[a.userId] = (board[a.userId] || 0) + a.score;
+    });
+
+    // 3. sort high → low
+    const sorted = Object.entries(board)    // [ [uid, points], … ]
+                        .sort((a, b) => b[1] - a[1]);
+
+    // 4. find where YOU are
+    const myIndex = sorted.findIndex(entry => entry[0] === userId);
+    const rank    = myIndex + 1;            // human rank (1-based)
+
+    // 5. show it
+    document.getElementById('userRank').textContent = rank ? `#${rank}` : '-';
+  } catch (error) {
+    console.error('Error updating rank:', error);
+    document.getElementById('userRank').textContent = '-';
+  }
+}
+
 
         // Load recent quizzes
         async function loadRecentQuizzes(userId) {
@@ -265,7 +286,7 @@
                 const attemptsQuery = query(
                     collection(db, 'attempts'),
                     where('userId', '==', userId),
-                    orderBy('completedAt', 'desc'),
+                    orderBy('finishedAt', 'desc'),
                     limit(5)
                 );
 
