@@ -525,6 +525,9 @@
                 console.error('Logout error:', error);
             }
         });
+// expose Firestore to the global window so the small script can use it
+window.db = db;
+
     </script>
 <!--  KEEP  inline onclick  –  just provide the functions  -->
 <script>
