@@ -170,11 +170,11 @@
             <p class="text-gray-500 text-sm">Designed by Musa</p>
         </div>
     </footer>
-
- <script type="module">
+<script type="module">
+/*  =====  Firebase boiler-plate  =====  */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, query, where, getDocs, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAvqWrEUrag34Wb92D1ixmXVCh3-HY5iB8",
@@ -184,80 +184,93 @@ const firebaseConfig = {
   messagingSenderId: "1090719692182",
   appId: "1:1090719692182:web:96920d6ba665541a6a59b7"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db  = getFirestore(app);
 
+/*  =====  entry point  =====  */
 onAuthStateChanged(auth, async (user) => {
   if (!user) { window.location.href = 'login.html'; return; }
   await loadUserData(user.uid);
   updateQuizStatus();
 });
 
+/*  =====  load everything  =====  */
 async function loadUserData(userId) {
+  // ---- user name ----
   const userDoc = await getDoc(doc(db, 'users', userId));
   document.getElementById('userName').textContent = userDoc.data()?.name || 'User';
 
-  const snap = await getDocs(query(collection(db, 'attempts'), where('userId', '==', userId)));
+  // ---- season-independent stats ----
+  const attemptsSnap = await getDocs(query(collection(db, 'attempts'), where('userId', '==', userId)));
   let totalP = 0, taken = 0;
-  snap.forEach(d => { const a = d.data(); if (a.completed) { totalP += a.score; taken += 1; } });
+  attemptsSnap.forEach(d => {
+    const a = d.data();
+    if (a.completed) { totalP += a.score; taken += 1; }
+  });
   const avg = taken ? Math.round((totalP / (taken * 30)) * 100) : 0;
-  document.getElementById('totalPoints').textContent   = totalP;
-  document.getElementById('quizzesTaken').textContent  = taken;
-  document.getElementById('averageScore').textContent  = avg + '%';
+  document.getElementById('totalPoints').textContent  = totalP;
+  document.getElementById('quizzesTaken').textContent = taken;
+  document.getElementById('averageScore').textContent = avg + '%';
 
+  // ---- rank (global leaderboard) ----
   await updateUserRank(userId);
+
+  // ---- recent quizzes + achievement text swap ----
   await loadRecentQuizzes(userId, taken);
 }
 
+/*  ----------  rank  ----------  */
 async function updateUserRank(userId) {
   try {
     const allSnap = await getDocs(query(collection(db, 'attempts'), where('completed', '==', true)));
     const board = {};
     allSnap.forEach(d => { const a = d.data(); board[a.userId] = (board[a.userId] || 0) + a.score; });
-    const sorted  = Object.entries(board).sort((a, b) => b[1] - a[1]);
-    const myRank  = sorted.findIndex(e => e[0] === userId) + 1;
+    const sorted = Object.entries(board).sort((a, b) => b[1] - a[1]);
+    const myRank = sorted.findIndex(e => e[0] === userId) + 1;
     document.getElementById('userRank').textContent = myRank ? `#${myRank}` : '-';
   } catch (e) {
-    console.error(e);
+    console.error('rank error', e);
     document.getElementById('userRank').textContent = '-';
   }
 }
 
+/*  ----------  recent quizzes  ----------  */
 async function loadRecentQuizzes(userId, taken) {
   const q   = query(collection(db, 'attempts'), where('userId', '==', userId), orderBy('finishedAt', 'desc'), limit(5));
   const snap = await getDocs(q);
   const box  = document.getElementById('recentQuizzes');
 
-  if (snap.empty) return;
+  /*  fill rows or keep default message  */
+  if (!snap.empty) {
+    box.innerHTML = '';                       // clear default
+    snap.forEach(d => {
+      const a = d.data();
+      const date = new Date(a.finishedAt).toLocaleDateString('en-US');
+      const pc   = Math.round((a.score / 30) * 100);
+      const row  = document.createElement('div');
+      row.className = 'flex items-center justify-between p-4 bg-slate-700/50 rounded-lg';
+      row.innerHTML = `
+        <div>
+          <p class="font-medium">Quiz – ${date}</p>
+          <p class="text-sm text-gray-400">Score: ${a.score}/30 (${pc}%)</p>
+        </div>
+        <div class="text-right">
+          <p class="text-sm text-gray-400">Time: ${a.totalTime}s</p>
+        </div>`;
+      box.appendChild(row);
+    });
+  }
 
-  box.innerHTML = '';
-  snap.forEach(d => {
-    const a = d.data();
-    const date = new Date(a.finishedAt).toLocaleDateString('en-US');
-    const pc   = Math.round((a.score / 30) * 100);
-    const row  = document.createElement('div');
-    row.className = 'flex items-center justify-between p-4 bg-slate-700/50 rounded-lg';
-    row.innerHTML = `
-      <div>
-        <p class="font-medium">Quiz – ${date}</p>
-        <p class="text-sm text-gray-400">Score: ${a.score}/30 (${pc}%)</p>
-      </div>
-      <div class="text-right">
-        <p class="text-sm text-gray-400">Time: ${a.totalTime}s</p>
-      </div>`;
-    box.appendChild(row);
-  });
-
-  // message swap
-  const msgBox = box.parentElement.querySelector('p.text-sm.text-gray-400');
-  if (msgBox && taken > 0) msgBox.textContent = 'Proceed on your journey';
+  /*  achievement box text swap  */
+  const msgEl = document.querySelector('#achievements p.text-sm.text-gray-400');
+  if (msgEl && taken > 0) msgEl.textContent = 'Proceed on your journey';
 }
 
+/*  ----------  weekday / time gate (unchanged)  ----------  */
 function updateQuizStatus() {
   const today     = new Date();
-  const dayOfWeek = today.getDay();
+  const dayOfWeek = today.getDay();          // 0 = Sunday
   const hour      = today.getHours();
   const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
   const inTime    = hour >= 9 && hour < 20;
@@ -290,10 +303,17 @@ function updateQuizStatus() {
   }
 }
 
+/*  ----------  buttons  ----------  */
 document.getElementById('startQuizBtn').addEventListener('click', () => window.location.href = 'quiz.html');
-document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'index.html'; });
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await signOut(auth);
+  window.location.href = 'index.html';
+});
+
+/*  ----------  minute refresh  ----------  */
 setInterval(updateQuizStatus, 60000);
 </script>
 
+ 
 </body>
 </html>
