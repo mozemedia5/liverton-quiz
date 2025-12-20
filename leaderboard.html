@@ -167,56 +167,71 @@
         // Load leaderboard data
         async function loadLeaderboard() {
             try {
-                showLoading();
-                
-                const seasonId = document.getElementById('seasonFilter').value;
-                
-                // Get season stats
-                const statsQuery = query(
-                    collection(db, 'season_stats'),
-                    where('seasonId', '==', seasonId),
-                    orderBy('totalPoints', 'desc'),
-                    orderBy('averageTime', 'asc')
-                );
-                
-                const statsSnapshot = await getDocs(statsQuery);
-                
-                if (statsSnapshot.empty) {
-                    showEmptyState();
-                    return;
-                }
-                
-                const leaderboardData = [];
-                
-                for (const doc of statsSnapshot.docs) {
-                    const stats = doc.data();
-                    
-                    // Get user data
-                    const userDoc = await getDoc(doc(db, 'users', stats.userId));
-                    const userData = userDoc.data();
-                    
-                    if (userData) {
-                        leaderboardData.push({
-                            userId: stats.userId,
-                            name: userData.name,
-                            totalPoints: stats.totalPoints || 0,
-                            quizzesTaken: stats.quizzesTaken || 0,
-                            averageTime: stats.averageTime || 0,
-                            lastActive: stats.lastActive || null
-                        });
-                    }
-                }
-                
-                displayLeaderboard(leaderboardData);
-                displayTopThree(leaderboardData.slice(0, 3));
-                updateStats(leaderboardData);
-                
-            } catch (error) {
-                console.error('Error loading leaderboard:', error);
-                showError();
-            }
-        }
+  showLoading();
 
+  /*  1.  season date range  */
+  const seasonId = document.getElementById('seasonFilter').value;
+  const seasonCol = await getDocs(query(collection(db, 'seasons'), where('code', '==', seasonId)));
+  if (seasonCol.empty) { showEmptyState(); return; }
+  const seasonDoc = seasonCol.docs[0];
+  const startDate = seasonDoc.data().startDate;
+  const endDate   = seasonDoc.data().endDate;
+
+  /*  2.  aggregate attempts  */
+  const attemptsSnap = await getDocs(
+    query(collection(db, 'attempts'),
+          where('finishedAt', '>=', startDate),
+          where('finishedAt', '<=', endDate),
+          where('completed', '==', true))
+  );
+
+  const board = {};                                 // userId → stats
+  attemptsSnap.forEach(d => {
+    const a = d.data();
+    if (!board[a.userId]) board[a.userId] = { points: 0, quizzes: 0, totalTime: 0, lastActive: null };
+    board[a.userId].points    += a.score;
+    board[a.userId].quizzes   += 1;
+    board[a.userId].totalTime += a.totalTime;
+    if (!board[a.userId].lastActive || a.finishedAt > board[a.userId].lastActive)
+       board[a.userId].lastActive = a.finishedAt;
+  });
+
+  /*  3.  build array + sort  */
+  const leaderboardData = [];
+  for (const [userId, stat] of Object.entries(board)) {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (!userDoc.exists()) continue;
+    leaderboardData.push({
+      userId,
+      name: userDoc.data().name,
+      totalPoints: stat.points,
+      quizzesTaken: stat.quizzes,
+      averageTime: stat.totalTime / stat.quizzes,
+      lastActive: stat.lastActive
+    });
+  }
+  leaderboardData.sort((a, b) => b.totalPoints - a.totalPoints || a.averageTime - b.averageTime);
+
+  /*  4.  paint page  */
+  displayLeaderboard(leaderboardData);
+  displayTopThree(leaderboardData.slice(0, 3));
+
+  /*  5.  top cards numbers  */
+  const participants = leaderboardData.length;
+  const quizzes      = leaderboardData.reduce((s, p) => s + p.quizzesTaken, 0);
+  const avgScore     = participants ? Math.round(leaderboardData.reduce((s, p) => s + p.totalPoints, 0) / participants) : 0;
+  document.getElementById('totalParticipants').textContent = participants;
+  document.getElementById('totalQuizzes').textContent      = quizzes;
+  document.getElementById('averageScore').textContent      = avgScore;
+
+  hideLoading();
+} catch (error) {
+  console.error(error);
+  showError();
+}
+
+                }
+             
         // Display leaderboard
         function displayLeaderboard(data) {
             const tbody = document.getElementById('leaderboardBody');
