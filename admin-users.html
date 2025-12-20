@@ -526,5 +526,87 @@
             }
         });
     </script>
+<!--  KEEP  inline onclick  –  just provide the functions  -->
+<script>
+  // approve → user can log in
+  async function approvePayment(userId) {
+    if (!confirm('Approve payment for this user?')) return;
+    try {
+      await firebase.firestore().doc('users/' + userId).update({
+        paymentStatus: 'approved',
+        approvedAt: new Date().toISOString()
+      });
+      alert('Payment approved – user can now log in.');
+      location.reload();                 // refresh table
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  }
+
+  // reject → user blocked
+  async function rejectPayment(userId) {
+    if (!confirm('Reject payment for this user?')) return;
+    try {
+      await firebase.firestore().doc('users/' + userId).update({
+        paymentStatus: 'rejected',
+        rejectedAt: new Date().toISOString()
+      });
+      alert('Payment rejected – user blocked.');
+      location.reload();
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  }
+
+  // view full details
+  async function viewUserDetails(userId) {
+    // the big module script already built the modal – just open it
+    // we only need to call the same function that exists inside the module
+    const user = window.currentUsers.find(u => u.id === userId);
+    if (!user) { alert('User not found'); return; }
+
+    // populate modal (same code you already had)
+    const content = document.getElementById('userDetailsContent');
+    content.innerHTML = `
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <h3 class="text-lg font-semibold mb-4 text-cyan-400">Personal Information</h3>
+          <div class="space-y-3">
+            <div><label class="block text-sm font-medium text-gray-400">Full Name</label><p class="text-white">${user.name}</p></div>
+            <div><label class="block text-sm font-medium text-gray-400">Email</label><p class="text-white">${user.email}</p></div>
+            <div><label class="block text-sm font-medium text-gray-400">Phone</label><p class="text-white">${user.phone}</p></div>
+            <div><label class="block text-sm font-medium text-gray-400">User ID</label><p class="text-gray-300 text-sm font-mono">${user.id}</p></div>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4 text-cyan-400">Registration Details</h3>
+          <div class="space-y-3">
+            <div><label class="block text-sm font-medium text-gray-400">Registration Date</label><p class="text-white">${new Date(user.registeredAt).toLocaleString()}</p></div>
+            <div><label class="block text-sm font-medium text-gray-400">Payment Status</label><p class="text-white capitalize font-semibold ${user.paymentStatus === 'approved' ? 'text-green-400' : user.paymentStatus === 'rejected' ? 'text-red-400' : 'text-yellow-400'}">${user.paymentStatus}</p></div>
+            <div><label class="block text-sm font-medium text-gray-400">Transaction ID</label><p class="text-white font-mono">${user.paymentTxnId || 'Not provided'}</p></div>
+            <div><label class="block text-sm font-medium text-gray-400">Role</label><p class="text-white capitalize">${user.role}</p></div>
+          </div>
+        </div>
+      </div>
+      ${user.paymentStatus === 'pending' ? `
+      <div class="mt-6 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+        <h4 class="font-semibold text-yellow-300 mb-2">Payment Verification Required</h4>
+        <p class="text-yellow-200 text-sm">This user has submitted their payment but it hasn't been verified yet.</p>
+        <div class="flex space-x-4 mt-4">
+          <button onclick="approvePayment('${user.id}'); hideUserModal();" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all">Approve Payment</button>
+          <button onclick="rejectPayment('${user.id}'); hideUserModal();"  class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition-all">Reject Payment</button>
+        </div>
+      </div>
+      ` : ''}
+    `;
+    document.getElementById('userModal').classList.remove('hidden');
+  }
+
+  // helper already exists in your module – just call it
+  function hideUserModal() {
+    document.getElementById('userModal').classList.add('hidden');
+  }
+</script>
+
 </body>
 </html>
