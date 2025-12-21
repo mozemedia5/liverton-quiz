@@ -598,6 +598,31 @@ window.viewUserDetails = function (userId) {
 
 /*  expose the functions to the window so inline onclick can reach them  */
 window.hideUserModal = () => document.getElementById('userModal').classList.add('hidden');
+// Export current user table to CSV
+window.exportUsers = function () {
+  if (window.currentUsers.length === 0) { alert('No users to export'); return; }
+
+  const csv = [
+    ['Name', 'Email', 'Phone', 'Payment Status', 'Transaction ID', 'Registration Date'],
+    ...window.currentUsers.map(user => [
+      user.name,
+      user.email,
+      user.phone,
+      user.paymentStatus,
+      user.paymentTxnId || '',
+      new Date(user.registeredAt).toLocaleDateString()
+    ])
+  ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `users_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
  </script>
 
 </body>
