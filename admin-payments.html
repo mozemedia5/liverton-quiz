@@ -358,7 +358,7 @@
                 currentPayments = payments;
                 displayPayments(payments);
                 updatePaymentStats(payments);
-                
+window.currentPayments = currentPayments;                
             } catch (error) {
                 console.error('Error loading payment data:', error);
                 showError();
