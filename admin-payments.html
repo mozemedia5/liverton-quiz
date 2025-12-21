@@ -787,6 +787,12 @@ window.bulkApprovePayments = async function () {
   alert(`Done: ${ok} approved, ${fail} failed.`);
   location.reload();          // refresh table
 };
+// Mark all pending as “reviewed” (informative only)
+window.markAllAsReviewed = function () {
+  const pending = window.currentPayments.filter(p => p.status === 'pending');
+  if (pending.length === 0) { alert('No pending payments'); return; }
+  alert(`${pending.length} payments marked for review – please approve or reject each one.`);
+};
 
     </script>
 </body>
