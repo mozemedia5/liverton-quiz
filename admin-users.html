@@ -251,7 +251,8 @@
 
                 currentUsers = users;
                 displayUsers(users);
-                
+                window.currentUsers = currentUsers;
+
             } catch (error) {
                 console.error('Error loading users:', error);
                 showError();
