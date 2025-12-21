@@ -570,6 +570,33 @@
                 console.error('Logout error:', error);
             }
         });
+/*  ----  ADMIN QUESTION BUTTON FUNCTIONS  ----  */
+window.editQuestion = function (questionId) {
+  alert('Edit functionality will be implemented in the next version.');
+};
+
+window.deleteQuestion = async function (questionId) {
+  if (!confirm('Delete this question?')) return;
+  try {
+    await deleteDoc(doc(db, 'questions', questionId));
+    alert('Question deleted!');
+    loadQuestions();          // refresh table
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+};
+
+window.showCreateQuizModal = function () {
+  document.getElementById('createQuizModal').classList.remove('hidden');
+  generateQuestionForms();
+};
+
+window.hideCreateQuizModal = function () {
+  document.getElementById('createQuizModal').classList.add('hidden');
+  document.getElementById('createQuizForm').reset();
+  document.getElementById('questionsContainer').innerHTML = '';
+};
+
     </script>
 </body>
 </html>
