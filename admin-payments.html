@@ -793,6 +793,11 @@ window.markAllAsReviewed = function () {
   if (pending.length === 0) { alert('No pending payments'); return; }
   alert(`${pending.length} payments marked for review – please approve or reject each one.`);
 };
+// Refresh table data
+window.refreshAllData = function () {
+  loadPaymentData();
+  alert('Data refreshed!');
+};
 
     </script>
 </body>
