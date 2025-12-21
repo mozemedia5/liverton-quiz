@@ -798,6 +798,26 @@ window.refreshAllData = function () {
   loadPaymentData();
   alert('Data refreshed!');
 };
+// Export current table to CSV
+window.exportPaymentData = function () {
+  if (window.currentPayments.length === 0) { alert('No data to export'); return; }
+
+  const csv = [
+    ['Name', 'Email', 'Phone', 'Transaction ID', 'Amount (UGX)', 'Status', 'Registration Date'],
+    ...window.currentPayments.map(p => [
+      p.name, p.email, p.phone, p.transactionId, p.amount, p.status,
+      new Date(p.registeredAt).toLocaleDateString()
+    ])
+  ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `payments_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
 
     </script>
 </body>
