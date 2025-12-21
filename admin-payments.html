@@ -764,6 +764,29 @@ window.hidePaymentModal = () => document.getElementById('paymentModal').classLis
 
 /*  expose the payments array so the inline onclick can find it  */
 window.currentPayments = currentPayments;   // add this line too
+// Bulk approve all pending payments
+window.bulkApprovePayments = async function () {
+  const pending = window.currentPayments.filter(p => p.status === 'pending');
+  if (pending.length === 0) { alert('No pending payments to approve'); return; }
+
+  if (!confirm(`Approve all ${pending.length} pending payments?`)) return;
+
+  let ok = 0, fail = 0;
+  for (const pay of pending) {
+    try {
+      await updateDoc(doc(db, 'users', pay.userId), {
+        paymentStatus: 'approved',
+        approvedAt: new Date().toISOString()
+      });
+      ok++;
+    } catch (e) {
+      console.error(e);
+      fail++;
+    }
+  }
+  alert(`Done: ${ok} approved, ${fail} failed.`);
+  location.reload();          // refresh table
+};
 
     </script>
 </body>
