@@ -271,19 +271,36 @@ function loadQuestion() {
   startTimer();
 }
 
+/*  ----  RESUME-TIMER  ----  */
 function startTimer() {
   clearInterval(timer);
-  const circumference = 2 * Math.PI * 45;
-  const circle = document.getElementById('timerCircle');
-  circle.style.strokeDasharray = circumference;
-  circle.style.strokeDashoffset = 0;
-  timer = setInterval(() => {
-    timeLeft--;
-    document.getElementById('timerText').textContent = timeLeft;
-    const offset = circumference * (15 - timeLeft) / 15;
-    circle.style.strokeDashoffset = offset;
-    if (timeLeft <= 0) { clearInterval(timer); selectOption(null); }
-  }, 1000);
+
+  // 1.  read remaining seconds from Firestore (saved at every tick)
+  const attemptRef = doc(db, 'attempts', attemptDocId);
+  getDoc(attemptRef).then(snap => {
+    if (!snap.exists()) { timeLeft = 15; } else {
+      const saved = snap.data().timeLeft ?? 15;
+      timeLeft = Math.max(0, saved);          // never negative
+    }
+
+    // 2.  start visual countdown
+    const circumference = 2 * Math.PI * 45;
+    const circle = document.getElementById('timerCircle');
+    circle.style.strokeDasharray = circumference;
+    circle.style.strokeDashoffset = 0;
+
+    timer = setInterval(() => {
+      timeLeft--;
+      document.getElementById('timerText').textContent = timeLeft;
+      const offset = circumference * (15 - timeLeft) / 15;
+      circle.style.strokeDashoffset = offset;
+
+      // 3.  save remaining seconds every second (for refresh resume)
+      updateDoc(attemptRef, { timeLeft });
+
+      if (timeLeft <= 0) { clearInterval(timer); selectOption(null); }
+    }, 1000);
+  });
 }
 
 async function selectOption(letter) {
@@ -291,18 +308,21 @@ async function selectOption(letter) {
   document.querySelectorAll('.option-button').forEach(b => b.disabled = true);
   const q = questions[currentQuestionIndex];
   const timeSpent = 15 - timeLeft;
-  const isCorrect = letter === q.correctAnswer;
-  userAnswers.push({
-    questionId: q.id,
-    selectedAnswer: letter,
-    correctAnswer: q.correctAnswer,
-    isCorrect,
-    timeSpent
-  });
-  if (isCorrect) {
-    score += 3;
-    document.getElementById('currentScore').textContent = score;
-  }
+  /*  ----  NO POINTS IF LATE  ----  */
+const timeSpent = 15 - timeLeft;
+const isCorrect = letter === q.correctAnswer && timeLeft > 0;   // ← extra condition
+userAnswers.push({
+  questionId: q.id,
+  selectedAnswer: letter,
+  correctAnswer: q.correctAnswer,
+  isCorrect,
+  timeSpent
+});
+if (isCorrect) {
+  score += 3;
+  document.getElementById('currentScore').textContent = score;
+}
+
   await saveAttempt();           // write state to Firestore
   document.getElementById('nextBtn').classList.remove('hidden');
 }
