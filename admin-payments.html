@@ -693,6 +693,78 @@
                 console.error('Logout error:', error);
             }
         });
+/*  ----  ADMIN PAYMENT BUTTON FUNCTIONS  ----  */
+window.approvePayment = async function (userId) {
+  if (!confirm('Approve this payment?')) return;
+  try {
+    await updateDoc(doc(db, 'users', userId), {
+      paymentStatus: 'approved',
+      approvedAt: new Date().toISOString()
+    });
+    alert('Payment approved – user can now log in.');
+    location.reload();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+};
+
+window.rejectPayment = async function (userId) {
+  if (!confirm('Reject this payment?')) return;
+  try {
+    await updateDoc(doc(db, 'users', userId), {
+      paymentStatus: 'rejected',
+      rejectedAt: new Date().toISOString()
+    });
+    alert('Payment rejected – user blocked.');
+    location.reload();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+};
+
+window.viewPaymentDetails = function (userId) {
+  const payment = window.currentPayments.find(p => p.userId === userId);
+  if (!payment) { alert('Payment record not found'); return; }
+  const content = document.getElementById('paymentDetailsContent');
+  content.innerHTML = `
+    <div class="grid md:grid-cols-2 gap-6">
+      <div>
+        <h3 class="text-lg font-semibold mb-4 text-cyan-400">User Information</h3>
+        <div class="space-y-3">
+          <div><label class="block text-sm font-medium text-gray-400">Full Name</label><p class="text-white">${payment.name}</p></div>
+          <div><label class="block text-sm font-medium text-gray-400">Email</label><p class="text-white">${payment.email}</p></div>
+          <div><label class="block text-sm font-medium text-gray-400">Phone</label><p class="text-white">${payment.phone}</p></div>
+        </div>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold mb-4 text-cyan-400">Payment Details</h3>
+        <div class="space-y-3">
+          <div><label class="block text-sm font-medium text-gray-400">Transaction ID</label><p class="text-white font-mono">${payment.transactionId}</p></div>
+          <div><label class="block text-sm font-medium text-gray-400">Amount</label><p class="text-white font-semibold">${payment.amount.toLocaleString()} UGX</p></div>
+          <div><label class="block text-sm font-medium text-gray-400">Payment Status</label><p class="text-white capitalize font-semibold ${payment.status === 'approved' ? 'text-green-400' : payment.status === 'rejected' ? 'text-red-400' : 'text-yellow-400'}">${payment.status}</p></div>
+          <div><label class="block text-sm font-medium text-gray-400">Registration Date</label><p class="text-white">${new Date(payment.registeredAt).toLocaleString()}</p></div>
+        </div>
+      </div>
+    </div>
+    ${payment.status === 'pending' ? `
+    <div class="mt-6 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+      <h4 class="font-semibold text-yellow-300 mb-2">Action Required</h4>
+      <p class="text-yellow-200 text-sm">This payment is pending verification. Please review the transaction details and take appropriate action.</p>
+      <div class="flex space-x-4 mt-4">
+        <button onclick="approvePayment('${payment.userId}'); hidePaymentModal();" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all">Approve Payment</button>
+        <button onclick="rejectPayment('${payment.userId}'); hidePaymentModal();"  class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition-all">Reject Payment</button>
+      </div>
+    </div>
+    ` : ''}
+  `;
+  document.getElementById('paymentModal').classList.remove('hidden');
+};
+
+window.hidePaymentModal = () => document.getElementById('paymentModal').classList.add('hidden');
+
+/*  expose the payments array so the inline onclick can find it  */
+window.currentPayments = currentPayments;   // add this line too
+
     </script>
 </body>
 </html>
