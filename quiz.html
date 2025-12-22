@@ -37,8 +37,28 @@
                     <button id="logoutBtn" class="text-white hover:text-red-300 transition-colors">Logout</button>
                 </div>
             </div>
+<!-- Hamburger button (mobile only) -->
+<button onclick="toggleMobileMenu()" class="md:hidden text-white focus:outline-none">
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+  </svg>
+</button>
+
         </div>
     </nav>
+<!-- =====  MOBILE MENU  ===== -->
+<div id="mobileMenu" class="hidden fixed inset-0 bg-slate-900/95 backdrop-blur-lg z-40">
+  <div class="flex flex-col items-center justify-center h-full space-y-8 text-xl">
+    <a href="dashboard.html"       class="text-cyan-400 hover:text-cyan-300" onclick="hideMobileMenu()">Dashboard</a>
+    <a href="quiz.html"            class="text-white hover:text-cyan-300"   onclick="hideMobileMenu()">Daily Quiz</a>
+    <a href="leaderboard.html"     class="text-white hover:text-cyan-300"   onclick="hideMobileMenu()">Leaderboard</a>
+    <a href="rules.html"           class="text-white hover:text-cyan-300"   onclick="hideMobileMenu()">Rules</a>
+    <button onclick="hideMobileMenu(); signOut(auth).then(() => window.location.href='index.html')" class="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg text-white">Logout</button>
+  </div>
+  <button onclick="hideMobileMenu()" class="absolute top-6 right-6 text-white">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+  </button>
+</div>
 
     <!-- Quiz Container -->
     <section class="pt-20 pb-8 min-h-screen">
@@ -426,6 +446,23 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   await signOut(auth);
   window.location.href = 'index.html';
 });
+/*  =====  MOBILE MENU  =====  */
+window.toggleMobileMenu = function () {
+  const menu = document.getElementById('mobileMenu');
+  menu.classList.toggle('hidden');
+};
+window.hideMobileMenu = function () {
+  document.getElementById('mobileMenu').classList.add('hidden');
+};
+/*  =====  MOBILE MENU  =====  */
+window.toggleMobileMenu = function () {
+  const menu = document.getElementById('mobileMenu');
+  menu.classList.toggle('hidden');
+};
+window.hideMobileMenu = function () {
+  document.getElementById('mobileMenu').classList.add('hidden');
+};
+
 </script>
 
 </body>
