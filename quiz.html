@@ -349,7 +349,6 @@ async function selectOption(letter) {
   const q = questions[currentQuestionIndex];
   const timeSpent = 15 - timeLeft;
   /*  ----  NO POINTS IF LATE  ----  */
-const timeSpent = 15 - timeLeft;
 const isCorrect = letter === q.correctAnswer && timeLeft > 0;   // ← extra condition
 userAnswers.push({
   questionId: q.id,
