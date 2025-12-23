@@ -19,46 +19,66 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
-    <!-- Navigation -->
-    <nav class="fixed top-0 w-full bg-slate-900/80 backdrop-blur-md z-50 border-b border-cyan-500/20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
-                        <span class="text-white font-bold text-sm">LQ</span>
-                    </div>
-                    <span class="text-xl font-semibold">Liverton Quiz</span>
-                </div>
-                <div class="hidden md:flex space-x-8">
-                    <a href="dashboard.html" class="text-white hover:text-cyan-300 transition-colors">Dashboard</a>
-                    <a href="quiz.html" class="text-cyan-400 hover:text-cyan-300 transition-colors">Daily Quiz</a>
-                    <a href="leaderboard.html" class="text-white hover:text-cyan-300 transition-colors">Leaderboard</a>
-                    <a href="rules.html" class="text-white hover:text-cyan-300 transition-colors">Rules</a>
-                    <button id="logoutBtn" class="text-white hover:text-red-300 transition-colors">Logout</button>
-                </div>
-            </div>
-<!-- Hamburger button (mobile only) -->
-<button onclick="toggleMobileMenu()" class="md:hidden text-white focus:outline-none">
-  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-  </svg>
-</button>
+<!-- =========  UNIVERSAL NAVIGATION  ========= -->
+<nav class="fixed top-0 w-full bg-slate-900/80 backdrop-blur-md z-50 border-b border-cyan-500/20">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
 
+      <!-- Left: logo + brand -->
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
+          <span class="text-white font-bold text-sm">LQ</span>
         </div>
-    </nav>
-<!-- =====  MOBILE MENU  ===== -->
+        <span class="text-xl font-semibold">Liverton Quiz</span>
+      </div>
+
+      <!-- Center: desktop links -->
+      <div class="hidden md:flex items-center space-x-8">
+        <a href="dashboard.html"    class="text-white hover:text-cyan-300 transition-colors">Dashboard</a>
+        <a href="quiz.html"         class="text-white hover:text-cyan-300 transition-colors">Daily Quiz</a>
+        <a href="leaderboard.html"  class="text-white hover:text-cyan-300 transition-colors">Leaderboard</a>
+        <a href="rules.html"        class="text-white hover:text-cyan-300 transition-colors">Rules</a>
+        <button id="logoutBtn" class="text-white hover:text-red-300 transition-colors">Logout</button>
+      </div>
+
+      <!-- Right: hamburger (mobile only) -->
+      <button onclick="toggleMobileMenu()" class="md:hidden text-white focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+    </div>
+  </div>
+</nav>
+
+<!-- =====  MOBILE MENU OVERLAY  ===== -->
 <div id="mobileMenu" class="hidden fixed inset-0 bg-slate-900/95 backdrop-blur-lg z-40">
   <div class="flex flex-col items-center justify-center h-full space-y-8 text-xl">
-    <a href="dashboard.html"       class="text-cyan-400 hover:text-cyan-300" onclick="hideMobileMenu()">Dashboard</a>
-    <a href="quiz.html"            class="text-white hover:text-cyan-300"   onclick="hideMobileMenu()">Daily Quiz</a>
-    <a href="leaderboard.html"     class="text-white hover:text-cyan-300"   onclick="hideMobileMenu()">Leaderboard</a>
-    <a href="rules.html"           class="text-white hover:text-cyan-300"   onclick="hideMobileMenu()">Rules</a>
-    <button onclick="hideMobileMenu(); signOut(auth).then(() => window.location.href='index.html')" class="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg text-white">Logout</button>
+    <a href="dashboard.html"   class="text-white hover:text-cyan-300" onclick="hideMobileMenu()">Dashboard</a>
+    <a href="quiz.html"        class="text-white hover:text-cyan-300" onclick="hideMobileMenu()">Daily Quiz</a>
+    <a href="leaderboard.html" class="text-white hover:text-cyan-300" onclick="hideMobileMenu()">Leaderboard</a>
+    <a href="rules.html"       class="text-white hover:text-cyan-300" onclick="hideMobileMenu()">Rules</a>
+    <button onclick="hideMobileMenu(); signOut(auth).then(()=>window.location.href='index.html')"
+            class="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg text-white">
+      Logout
+    </button>
   </div>
   <button onclick="hideMobileMenu()" class="absolute top-6 right-6 text-white">
-    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M6 18L18 6M6 6l12 12" />
+    </svg>
   </button>
 </div>
+
+<!-- =========  UNIVERSAL JS FOR MENU  ========= -->
+<script>
+  window.toggleMobileMenu = () => document.getElementById('mobileMenu').classList.toggle('hidden');
+  window.hideMobileMenu   = () => document.getElementById('mobileMenu').classList.add('hidden');
+</script>
+
 
     <!-- Quiz Container -->
     <section class="pt-20 pb-8 min-h-screen">
@@ -446,22 +466,6 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   await signOut(auth);
   window.location.href = 'index.html';
 });
-/*  =====  MOBILE MENU  =====  */
-window.toggleMobileMenu = function () {
-  const menu = document.getElementById('mobileMenu');
-  menu.classList.toggle('hidden');
-};
-window.hideMobileMenu = function () {
-  document.getElementById('mobileMenu').classList.add('hidden');
-};
-/*  =====  MOBILE MENU  =====  */
-window.toggleMobileMenu = function () {
-  const menu = document.getElementById('mobileMenu');
-  menu.classList.toggle('hidden');
-};
-window.hideMobileMenu = function () {
-  document.getElementById('mobileMenu').classList.add('hidden');
-};
 
 </script>
 
