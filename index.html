@@ -203,111 +203,72 @@
         </div>
     </footer>
 
-    <script>
-        // Particle animation
-        let particles = [];
-        let atoms = [];
+   <script>
+/* ---------- light-weight particles (no more freeze) ---------- */
+let particles = [], atoms = [];
 
-        function setup() {
-            let canvas = createCanvas(windowWidth, windowHeight);
-            canvas.parent('particles-container');
-            
-            // Create atoms
-            for (let i = 0; i < 5; i++) {
-                atoms.push({
-                    x: random(width),
-                    y: random(height),
-                    electrons: []
-                });
-                
-                // Create electrons for each atom
-                for (let j = 0; j < 3; j++) {
-                    atoms[i].electrons.push({
-                        angle: random(TWO_PI),
-                        radius: 30 + j * 20,
-                        speed: 0.02 + j * 0.01
-                    });
-                }
-            }
-            
-            // Create floating particles
-            for (let i = 0; i < 50; i++) {
-                particles.push({
-                    x: random(width),
-                    y: random(height),
-                    vx: random(-0.5, 0.5),
-                    vy: random(-0.5, 0.5),
-                    size: random(2, 6)
-                });
-            }
-        }
+function setup() {
+  let canvas = createCanvas(windowWidth, windowHeight);
+  canvas.parent('particles-container');
+  frameRate(24);                                    // smooth but light on GPU
 
-        function draw() {
-            clear();
-            
-            // Draw floating particles
-            for (let particle of particles) {
-                fill(8, 145, 178, 100);
-                noStroke();
-                ellipse(particle.x, particle.y, particle.size);
-                
-                particle.x += particle.vx;
-                particle.y += particle.vy;
-                
-                if (particle.x < 0 || particle.x > width) particle.vx *= -1;
-                if (particle.y < 0 || particle.y > height) particle.vy *= -1;
-            }
-            
-            // Draw atoms and electrons
-            for (let atom of atoms) {
-                // Draw nucleus
-                fill(8, 145, 178);
-                noStroke();
-                ellipse(atom.x, atom.y, 20);
-                
-                // Draw electrons
-                for (let electron of atom.electrons) {
-                    electron.angle += electron.speed;
-                    let x = atom.x + cos(electron.angle) * electron.radius;
-                    let y = atom.y + sin(electron.angle) * electron.radius;
-                    
-                    // Draw orbital path
-                    stroke(8, 145, 178, 50);
-                    strokeWeight(1);
-                    noFill();
-                    ellipse(atom.x, atom.y, electron.radius * 2);
-                    
-                    // Draw electron
-                    fill(14, 116, 144);
-                    noStroke();
-                    ellipse(x, y, 8);
-                }
-            }
-        }
-
-        function windowResized() {
-            resizeCanvas(windowWidth, windowHeight);
-        }
-
-        // Mobile menu toggle
-        function toggleMobileMenu() {
-  const menu = document.getElementById('mobileMenu');
-  menu.classList.toggle('hidden');
-}
-function hideMobileMenu() {
-  document.getElementById('mobileMenu').classList.add('hidden');
+  /* fewer items = no scroll jank */
+  for (let i = 0; i < 3; i++) {                     // 3 atoms
+    atoms.push({ x: random(width), y: random(height), electrons: [] });
+    for (let j = 0; j < 2; j++) {                   // 2 orbits each
+      atoms[i].electrons.push({ angle: random(TWO_PI), radius: 30 + j * 20, speed: 0.02 + j * 0.01 });
+    }
+  }
+  for (let i = 0; i < 25; i++) {                    // 25 floating dots
+    particles.push({ x: random(width), y: random(height), vx: random(-0.5, 0.5), vy: random(-0.5, 0.5), size: random(2, 6) });
+  }
 }
 
+function draw() {
+  if (document.hidden) return;                      // pause when tab invisible
+  clear();
 
-        // Smooth scrolling for navigation
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
-            });
-        });
-    </script>
+  /* floating particles */
+  for (let p of particles) {
+    fill(8, 145, 178, 120);
+    noStroke();
+    ellipse(p.x, p.y, p.size);
+    p.x += p.vx;  p.y += p.vy;
+    if (p.x < 0 || p.x > width)  p.vx *= -1;
+    if (p.y < 0 || p.y > height) p.vy *= -1;
+  }
+
+  /* atoms + electrons (no orbit lines = faster) */
+  for (let a of atoms) {
+    fill(8, 145, 178);                                // nucleus
+    ellipse(a.x, a.y, 18);
+
+    for (let e of a.electrons) {
+      e.angle += e.speed;
+      let ex = a.x + cos(e.angle) * e.radius;
+      let ey = a.y + sin(e.angle) * e.radius;
+      fill(14, 116, 144);
+      ellipse(ex, ey, 6);                             // electron
+    }
+  }
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
+/* ---------- mobile menu (unchanged) ---------- */
+window.toggleMobileMenu = () => document.getElementById('mobileMenu').classList.toggle('hidden');
+window.hideMobileMenu   = () => document.getElementById('mobileMenu').classList.add('hidden');
+
+/* ---------- smooth scroll (unchanged) ---------- */
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelector(anchor.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+
 </body>
 </html>
