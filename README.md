@@ -8,7 +8,7 @@ A comprehensive web application for conducting science quiz competitions with Fi
 - **Daily Quiz System**: 10 questions per day with 15-second timer per question
 - **Real-time Leaderboard**: Live scoring and ranking updates
 - **Admin Dashboard**: Complete management system for questions, users, and payments
-- **Payment Integration**: Mobile Money payment verification system
+- **Payment Integration**: Automated Flutterwave integration for Mobile Money (Airtel & MTN)
 - **Mobile Responsive**: Optimized for mobile-first experience
 
 ## Technology Stack
@@ -105,7 +105,7 @@ firebase deploy --only hosting
     name: "User Name",
     email: "user@example.com",
     phone: "+256XXXXXXXXX",
-    paymentTxnId: "transaction_id",
+    whatsapp: "+256XXXXXXXXX",
     paymentStatus: "pending|approved|rejected",
     registeredAt: "timestamp",
     role: "user|admin",
@@ -188,10 +188,9 @@ firebase deploy --only hosting
 - **Runner-up**: 50,000 UGX
 
 ### Payment
-- **Entry Fee**: 2,500 UGX
+- **Entry Fee**: 2,000 UGX
 - **Payment Options**: 
-  - +256 705 954 597 (Abdu Katerega)
-  - +256 791 756 647 (Yosam Wamala)
+  - Automated Payment via Flutterwave (Airtel & MTN)
 
 ## Admin Features
 

@@ -177,9 +177,8 @@
                         // Redirect to user dashboard
                         window.location.href = 'dashboard.html';
                     } else {
-                        // Show pending approval message
-                        alert('Your payment is pending approval. Please wait for verification.');
-                        await auth.signOut();
+                        // Redirect to payment page
+                        window.location.href = 'payment.html';
                     }
                 }
 
@@ -209,7 +208,7 @@
                         name: user.displayName,
                         email: user.email,
                         phone: '',
-                        paymentTxnId: '',
+                        whatsapp: '',
                         paymentStatus: 'pending',
                         registeredAt: new Date().toISOString(),
                         role: 'user',

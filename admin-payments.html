@@ -138,8 +138,8 @@
                                class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Transaction ID</label>
-                        <input type="text" id="transactionFilter" placeholder="Transaction ID..." 
+                        <label class="block text-sm font-medium text-gray-300 mb-2">WhatsApp Number</label>
+                        <input type="text" id="whatsappFilter" placeholder="WhatsApp Number..." 
                                class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none">
                     </div>
                     <div class="flex items-end">
@@ -202,7 +202,7 @@
                             <tr class="border-b border-slate-600">
                                 <th class="text-left py-4 px-4 font-semibold text-gray-300">User</th>
                                 <th class="text-left py-4 px-4 font-semibold text-gray-300">Contact</th>
-                                <th class="text-center py-4 px-4 font-semibold text-gray-300">Transaction ID</th>
+                                <th class="text-center py-4 px-4 font-semibold text-gray-300">WhatsApp</th>
                                 <th class="text-center py-4 px-4 font-semibold text-gray-300">Amount</th>
                                 <th class="text-center py-4 px-4 font-semibold text-gray-300">Status</th>
                                 <th class="text-center py-4 px-4 font-semibold text-gray-300">Registration Date</th>
@@ -314,7 +314,7 @@
                 const searchTerm = document.getElementById('searchUsers').value.toLowerCase();
                 const paymentStatus = document.getElementById('paymentStatusFilter').value;
                 const dateFilter = document.getElementById('dateFilter').value;
-                const transactionFilter = document.getElementById('transactionFilter').value.toLowerCase();
+                const whatsappFilter = document.getElementById('whatsappFilter').value.toLowerCase();
 
                 let usersQuery = collection(db, 'users');
                 
@@ -343,16 +343,16 @@
                     
                     // Apply search filters
                     const nameMatch = searchTerm ? user.name.toLowerCase().includes(searchTerm) || user.email.toLowerCase().includes(searchTerm) : true;
-                    const transactionMatch = transactionFilter ? (user.paymentTxnId || '').toLowerCase().includes(transactionFilter) : true;
+                    const whatsappMatch = whatsappFilter ? (user.whatsapp || '').toLowerCase().includes(whatsappFilter) : true;
                     
-                    if (nameMatch && transactionMatch) {
+                    if (nameMatch && whatsappMatch) {
                         payments.push({
                             userId: user.id,
                             name: user.name,
                             email: user.email,
                             phone: user.phone,
-                            transactionId: user.paymentTxnId || 'N/A',
-                            amount: 1000, // Fixed amount
+                            whatsapp: user.whatsapp || 'N/A',
+                            amount: 2000, // Fixed amount
                             status: user.paymentStatus,
                             registeredAt: user.registeredAt,
                             paymentStatus: user.paymentStatus
@@ -411,7 +411,7 @@ window.currentPayments = currentPayments;
                         <div class="text-sm">${payment.phone}</div>
                     </td>
                     <td class="py-4 px-4 text-center">
-                        <div class="text-sm font-mono">${payment.transactionId}</div>
+                        <div class="text-sm font-mono">${payment.whatsapp || 'N/A'}</div>
                     </td>
                     <td class="py-4 px-4 text-center">
                         <div class="font-semibold">${payment.amount.toLocaleString()} UGX</div>
@@ -500,10 +500,10 @@ window.currentPayments = currentPayments;
                     <div>
                         <h3 class="text-lg font-semibold mb-4 text-cyan-400">Payment Details</h3>
                         <div class="space-y-3">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-400">Transaction ID</label>
-                                <p class="text-white font-mono">${payment.transactionId}</p>
-                            </div>
+<div>
+	                                <label class="block text-sm font-medium text-gray-400">WhatsApp</label>
+	                                <p class="text-white font-mono">${payment.whatsapp || 'N/A'}</p>
+	                            </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-400">Amount</label>
                                 <p class="text-white font-semibold">${payment.amount.toLocaleString()} UGX</p>
@@ -560,7 +560,7 @@ window.currentPayments = currentPayments;
                 // Create payment record
                 await addDoc(collection(db, 'payments'), {
                     userId: userId,
-                    amount: 2500,
+                    amount: 2000,
                     currency: 'UGX',
                     status: 'approved',
                     approvedAt: serverTimestamp(),
@@ -640,12 +640,12 @@ window.currentPayments = currentPayments;
             }
 
             const csvContent = [
-                ['Name', 'Email', 'Phone', 'Transaction ID', 'Amount (UGX)', 'Payment Status', 'Registration Date'],
+                ['Name', 'Email', 'Phone', 'WhatsApp', 'Amount (UGX)', 'Payment Status', 'Registration Date'],
                 ...currentPayments.map(payment => [
                     payment.name,
                     payment.email,
                     payment.phone,
-                    payment.transactionId,
+                    payment.whatsapp || '',
                     payment.amount,
                     payment.status,
                     new Date(payment.registeredAt).toLocaleDateString()
@@ -744,7 +744,7 @@ window.viewPaymentDetails = function (userId) {
       <div>
         <h3 class="text-lg font-semibold mb-4 text-cyan-400">Payment Details</h3>
         <div class="space-y-3">
-          <div><label class="block text-sm font-medium text-gray-400">Transaction ID</label><p class="text-white font-mono">${payment.transactionId}</p></div>
+          <div><label class="block text-sm font-medium text-gray-400">WhatsApp</label><p class="text-white font-mono">${payment.whatsapp || 'N/A'}</p></div>
           <div><label class="block text-sm font-medium text-gray-400">Amount</label><p class="text-white font-semibold">${payment.amount.toLocaleString()} UGX</p></div>
           <div><label class="block text-sm font-medium text-gray-400">Payment Status</label><p class="text-white capitalize font-semibold ${payment.status === 'approved' ? 'text-green-400' : payment.status === 'rejected' ? 'text-red-400' : 'text-yellow-400'}">${payment.status}</p></div>
           <div><label class="block text-sm font-medium text-gray-400">Registration Date</label><p class="text-white">${new Date(payment.registeredAt).toLocaleString()}</p></div>
@@ -808,9 +808,9 @@ window.exportPaymentData = function () {
   if (window.currentPayments.length === 0) { alert('No data to export'); return; }
 
   const csv = [
-    ['Name', 'Email', 'Phone', 'Transaction ID', 'Amount (UGX)', 'Status', 'Registration Date'],
+    ['Name', 'Email', 'Phone', 'WhatsApp', 'Amount (UGX)', 'Status', 'Registration Date'],
     ...window.currentPayments.map(p => [
-      p.name, p.email, p.phone, p.transactionId, p.amount, p.status,
+      p.name, p.email, p.phone, p.whatsapp || 'N/A', p.amount, p.status,
       new Date(p.registeredAt).toLocaleDateString()
     ])
   ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
