@@ -211,6 +211,17 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // Helper function to convert Firestore timestamp to Date
+        function toDate(timestamp) {
+            if (!timestamp) return new Date();
+            // If it's already a Date object
+            if (timestamp instanceof Date) return timestamp;
+            // If it's a Firestore Timestamp with toDate() method
+            if (timestamp.toDate && typeof timestamp.toDate === 'function') return timestamp.toDate();
+            // If it's a string or number
+            return new Date(timestamp);
+        }
+
         // Check authentication and admin role
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -282,7 +293,7 @@
                 });
 
                 // Sort by registration date (newest first)
-                registrations.sort((a, b) => new Date(b.registeredAt) - new Date(a.registeredAt));
+                registrations.sort((a, b) => toDate(b.registeredAt) - toDate(a.registeredAt));
                 
                 const container = document.getElementById('recentRegistrations');
                 container.innerHTML = '';
@@ -314,7 +325,7 @@
                         </div>
                         <div class="text-right">
                             <span class="text-sm ${statusColor} capitalize">${registration.paymentStatus}</span>
-                            <p class="text-xs text-gray-400">${new Date(registration.registeredAt).toLocaleDateString()}</p>
+                            <p class="text-xs text-gray-400">${toDate(registration.registeredAt).toLocaleDateString()}</p>
                         </div>
                     `;
                     

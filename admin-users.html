@@ -184,6 +184,17 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // Helper function to convert Firestore timestamp to Date
+        function toDate(timestamp) {
+            if (!timestamp) return new Date();
+            // If it's already a Date object
+            if (timestamp instanceof Date) return timestamp;
+            // If it's a Firestore Timestamp with toDate() method
+            if (timestamp.toDate && typeof timestamp.toDate === 'function') return timestamp.toDate();
+            // If it's a string or number
+            return new Date(timestamp);
+        }
+
         // Global variables
         let currentUsers = [];
 
@@ -313,7 +324,7 @@
                         <div class="text-sm font-mono">${user.whatsapp || 'N/A'}</div>
                     </td>
                     <td class="py-4 px-4 text-center">
-                        <div class="text-sm">${new Date(user.registeredAt).toLocaleDateString()}</div>
+                        <div class="text-sm">${toDate(user.registeredAt).toLocaleDateString()}</div>
                     </td>
                     <td class="py-4 px-4 text-center">
                         <div class="flex space-x-2 justify-center">
@@ -384,7 +395,7 @@
                         <div class="space-y-3">
                             <div>
                                 <label class="block text-sm font-medium text-gray-400">Registration Date</label>
-                                <p class="text-white">${new Date(user.registeredAt).toLocaleString()}</p>
+                                <p class="text-white">${toDate(user.registeredAt).toLocaleString()}</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-400">Payment Status</label>
@@ -481,7 +492,7 @@
                     user.phone,
                     user.paymentStatus,
                     user.whatsapp || '',
-                    new Date(user.registeredAt).toLocaleDateString()
+                    toDate(user.registeredAt).toLocaleDateString()
                 ])
             ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
 
@@ -580,7 +591,7 @@ window.viewUserDetails = function (userId) {
       <div>
         <h3 class="text-lg font-semibold mb-4 text-cyan-400">Registration Details</h3>
         <div class="space-y-3">
-          <div><label class="block text-sm font-medium text-gray-400">Registration Date</label><p class="text-white">${new Date(user.registeredAt).toLocaleString()}</p></div>
+          <div><label class="block text-sm font-medium text-gray-400">Registration Date</label><p class="text-white">${toDate(user.registeredAt).toLocaleString()}</p></div>
           <div><label class="block text-sm font-medium text-gray-400">Payment Status</label><p class="text-white capitalize font-semibold ${user.paymentStatus === 'approved' ? 'text-green-400' : user.paymentStatus === 'rejected' ? 'text-red-400' : 'text-yellow-400'}">${user.paymentStatus}</p></div>
           <div><label class="block text-sm font-medium text-gray-400">WhatsApp</label><p class="text-white font-mono">${user.whatsapp || 'Not provided'}</p></div>
           <div><label class="block text-sm font-medium text-gray-400">Role</label><p class="text-white capitalize">${user.role}</p></div>
@@ -615,7 +626,7 @@ window.exportUsers = function () {
       user.phone,
       user.paymentStatus,
       user.whatsapp || '',
-      new Date(user.registeredAt).toLocaleDateString()
+      toDate(user.registeredAt).toLocaleDateString()
     ])
   ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
 

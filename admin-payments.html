@@ -283,6 +283,17 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // Helper function to convert Firestore timestamp to Date
+        function toDate(timestamp) {
+            if (!timestamp) return new Date();
+            // If it's already a Date object
+            if (timestamp instanceof Date) return timestamp;
+            // If it's a Firestore Timestamp with toDate() method
+            if (timestamp.toDate && typeof timestamp.toDate === 'function') return timestamp.toDate();
+            // If it's a string or number
+            return new Date(timestamp);
+        }
+
         // Global variables
         let currentPayments = [];
 
@@ -422,7 +433,7 @@ window.currentPayments = currentPayments;
                         </span>
                     </td>
                     <td class="py-4 px-4 text-center">
-                        <div class="text-sm">${new Date(payment.registeredAt).toLocaleDateString()}</div>
+                        <div class="text-sm">${toDate(payment.registeredAt).toLocaleDateString()}</div>
                     </td>
                     <td class="py-4 px-4 text-center">
                         <div class="flex space-x-2 justify-center">
@@ -514,7 +525,7 @@ window.currentPayments = currentPayments;
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-400">Registration Date</label>
-                                <p class="text-white">${new Date(payment.registeredAt).toLocaleString()}</p>
+                                <p class="text-white">${toDate(payment.registeredAt).toLocaleString()}</p>
                             </div>
                         </div>
                     </div>
@@ -648,7 +659,7 @@ window.currentPayments = currentPayments;
                     payment.whatsapp || '',
                     payment.amount,
                     payment.status,
-                    new Date(payment.registeredAt).toLocaleDateString()
+                    toDate(payment.registeredAt).toLocaleDateString()
                 ])
             ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
 
@@ -747,7 +758,7 @@ window.viewPaymentDetails = function (userId) {
           <div><label class="block text-sm font-medium text-gray-400">WhatsApp</label><p class="text-white font-mono">${payment.whatsapp || 'N/A'}</p></div>
           <div><label class="block text-sm font-medium text-gray-400">Amount</label><p class="text-white font-semibold">${payment.amount.toLocaleString()} UGX</p></div>
           <div><label class="block text-sm font-medium text-gray-400">Payment Status</label><p class="text-white capitalize font-semibold ${payment.status === 'approved' ? 'text-green-400' : payment.status === 'rejected' ? 'text-red-400' : 'text-yellow-400'}">${payment.status}</p></div>
-          <div><label class="block text-sm font-medium text-gray-400">Registration Date</label><p class="text-white">${new Date(payment.registeredAt).toLocaleString()}</p></div>
+          <div><label class="block text-sm font-medium text-gray-400">Registration Date</label><p class="text-white">${toDate(payment.registeredAt).toLocaleString()}</p></div>
         </div>
       </div>
     </div>
@@ -811,7 +822,7 @@ window.exportPaymentData = function () {
     ['Name', 'Email', 'Phone', 'WhatsApp', 'Amount (UGX)', 'Status', 'Registration Date'],
     ...window.currentPayments.map(p => [
       p.name, p.email, p.phone, p.whatsapp || 'N/A', p.amount, p.status,
-      new Date(p.registeredAt).toLocaleDateString()
+      toDate(p.registeredAt).toLocaleDateString()
     ])
   ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
 
@@ -826,4 +837,4 @@ window.exportPaymentData = function () {
 
     </script>
 </body>
-</html>
+</html>l>
