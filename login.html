@@ -127,8 +127,8 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAvqWrEUrag34Wb92D1ixmXVCh3-HY5iB8",
@@ -142,6 +142,19 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // Set persistence to LOCAL (survives browser/tab closes and PWA restarts)
+        setPersistence(auth, browserLocalPersistence).catch((error) => {
+            console.error('Error setting persistence:', error);
+        });
+
+        // Check if user is already logged in - redirect to dashboard
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is already logged in, redirect to dashboard
+                window.location.href = 'dashboard.html';
+            }
+        });
 
         // Login form handler
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
