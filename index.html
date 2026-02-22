@@ -284,5 +284,31 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   }
 </script>
 
+<!-- Firebase Auth Check for Homepage -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAvqWrEUrag34Wb92D1ixmXVCh3-HY5iB8",
+    authDomain: "liverton-quiz-championship.firebaseapp.com",
+    projectId: "liverton-quiz-championship",
+    storageBucket: "liverton-quiz-championship.firebasestorage.app",
+    messagingSenderId: "1090719692182",
+    appId: "1:1090719692182:web:96920d6ba665541a6a59b7"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // Check if user is already logged in
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is logged in, redirect to dashboard
+      window.location.href = 'dashboard.html';
+    }
+  });
+</script>
+
 </body>
 </html>
