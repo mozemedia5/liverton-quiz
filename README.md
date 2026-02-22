@@ -5,11 +5,49 @@ A comprehensive web application for conducting science quiz competitions with Fi
 ## Features
 
 - **User Registration & Authentication**: Secure registration with payment verification
+- **Persistent Authentication**: Users stay logged in across browser restarts and PWA launches
+- **Smart Page Routing**: Automatic redirection based on authentication state
 - **Daily Quiz System**: 10 questions per day with 15-second timer per question
 - **Real-time Leaderboard**: Live scoring and ranking updates
 - **Admin Dashboard**: Complete management system for questions, users, and payments
 - **Payment Integration**: Automated Flutterwave integration for Mobile Money (Airtel & MTN)
 - **Mobile Responsive**: Optimized for mobile-first experience
+- **Progressive Web App (PWA)**: Installable app with offline capabilities
+
+## Authentication Flow
+
+### User Journey
+
+#### First-Time Visitors
+1. **Homepage (index.html)**: See welcome page with registration/login options
+2. **Register (register.html)**: Create account with payment verification
+3. **Auto-redirect to Login**: After successful registration
+4. **Login (login.html)**: Enter credentials
+5. **Dashboard (dashboard.html)**: Access user dashboard upon successful login
+
+#### Returning Authenticated Users
+1. **Automatic Dashboard Access**: Users are automatically redirected to dashboard
+2. **Persistent Sessions**: Authentication persists across:
+   - Browser restarts
+   - Tab closes
+   - PWA app restarts
+   - Device reboots (for PWA)
+3. **No Re-login Required**: Users stay logged in until they explicitly logout
+
+#### Authentication State Management
+- **index.html**: Redirects authenticated users to dashboard
+- **login.html**: Redirects authenticated users to dashboard
+- **register.html**: Redirects authenticated users to dashboard
+- **dashboard.html**: Redirects unauthenticated users to login
+- **quiz.html**: Redirects unauthenticated users to login
+- **leaderboard.html**: Redirects unauthenticated users to login
+- **rules.html**: Accessible to all, shows logout button for authenticated users
+
+#### Logout Behavior
+1. **Logout Button**: Available on all authenticated pages (dashboard, quiz, leaderboard, rules)
+2. **Redirect to Login**: After logout, users are redirected to login page
+3. **Never See Homepage**: Authenticated users never see the homepage unless they logout
+4. **Mobile Menu Logout**: Same logout behavior in mobile responsive menu
 
 ## Technology Stack
 
