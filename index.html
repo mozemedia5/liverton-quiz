@@ -85,19 +85,19 @@
             <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 mb-12 border border-cyan-500/20">
                 <div class="grid md:grid-cols-3 gap-6 text-center">
                     <div>
-                        <div class="text-3xl font-bold text-cyan-400">4 Weeks</div>
+                        <div class="text-3xl font-bold text-cyan-400" id="durationText">4 Weeks</div>
                         <div class="text-gray-300">Competition Duration</div>
-                        <div class="text-sm text-gray-400">Jan 26 - Feb 20, 2026</div>
+                        <div class="text-sm text-gray-400" id="dateRange">Jan 26 - Feb 20, 2026</div>
                     </div>
                     <div>
-                        <div class="text-3xl font-bold text-green-400">500,000 UGX</div>
+                        <div class="text-3xl font-bold text-green-400" id="winnerPrize">500,000 UGX</div>
                         <div class="text-gray-300">Winner Prize</div>
-                        <div class="text-sm text-gray-400">+ Runner-up: 100,000 UGX</div>
+                        <div class="text-sm text-gray-400">+ Runner-up: <span id="runnerupPrize">100,000 UGX</span></div>
                     </div>
                     <div>
-                        <div class="text-3xl font-bold text-yellow-400">2,000 UGX</div>
+                        <div class="text-3xl font-bold text-yellow-400" id="entryFee">2,000 UGX</div>
                         <div class="text-gray-300">Entry Fee</div>
-                        <div class="text-sm text-gray-400">Affordable for all</div>
+                        <div class="text-sm text-gray-400" id="entryFeeDesc">Affordable for all</div>
                     </div>
                 </div>
             </div>
@@ -288,6 +288,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAvqWrEUrag34Wb92D1ixmXVCh3-HY5iB8",
@@ -300,6 +301,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db = getFirestore(app);
 
   // Check if user is already logged in
   onAuthStateChanged(auth, (user) => {
@@ -308,6 +310,31 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       window.location.href = 'dashboard.html';
     }
   });
+
+  // Load competition settings from Firestore
+  async function loadCompetitionSettings() {
+    try {
+      const settingsDoc = await getDoc(doc(db, 'settings', 'competition'));
+      
+      if (settingsDoc.exists()) {
+        const data = settingsDoc.data();
+        
+        // Update competition details dynamically
+        if (data.durationText) document.getElementById('durationText').textContent = data.durationText;
+        if (data.dateRange) document.getElementById('dateRange').textContent = data.dateRange;
+        if (data.winnerPrize) document.getElementById('winnerPrize').textContent = data.winnerPrize;
+        if (data.runnerupPrize) document.getElementById('runnerupPrize').textContent = data.runnerupPrize;
+        if (data.entryFee) document.getElementById('entryFee').textContent = data.entryFee;
+        if (data.entryFeeDesc) document.getElementById('entryFeeDesc').textContent = data.entryFeeDesc;
+      }
+    } catch (error) {
+      console.error('Error loading competition settings:', error);
+      // Keep default values if loading fails
+    }
+  }
+
+  // Load settings on page load
+  loadCompetitionSettings();
 </script>
 
 </body>
