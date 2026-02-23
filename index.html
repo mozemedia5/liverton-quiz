@@ -304,10 +304,19 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   const db = getFirestore(app);
 
   // Check if user is already logged in
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
-      // User is logged in, redirect to dashboard
-      window.location.href = 'dashboard.html';
+      // Check user role and redirect accordingly
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userData = userDoc.data();
+      
+      if (userData && userData.role === 'admin') {
+        // Admin users go to admin dashboard
+        window.location.href = 'admin-dashboard.html';
+      } else {
+        // Regular users go to user dashboard
+        window.location.href = 'dashboard.html';
+      }
     }
   });
 
